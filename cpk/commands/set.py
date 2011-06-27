@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import NoNode, Password as Pass, Node, session, AttributeValue, Attribute
+from model import NoNode, Password, Node, session, AttributeValue, Attribute
 import sys
 
 class Command(IFace):
