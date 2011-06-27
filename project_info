@@ -64,6 +64,8 @@ That's what attributes are for.
 	echo "trojita@blesmrt.net" | cpk set -a retrieval_email url com domain user
 
 ==== TODO ====
+rename/del command
+
 paths aliasing
 	eg. path "url com example www john_doe" can also be accessed with path "iana ldap john_doe"
 
