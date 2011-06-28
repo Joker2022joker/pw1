@@ -144,7 +144,10 @@ class TestClass(unittest.TestCase):
         p = self.s_app("info")
         o = p.stdout.read()
         m = re.search(r'^db:\t(.+)$',o)
-        os.remove(m.groups()[0])
+        db = m.groups()[0]
+        check = '/tmp/cpk/'
+        if len(db) > len(check) and db[0:len(check)] == check:
+            os.remove(db)
  
 if __name__ == '__main__':
     unittest.main()
