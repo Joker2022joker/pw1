@@ -1,4 +1,5 @@
-===== Cooperative Password Keeper =====
+Cooperative Password Keeper
+===========================
 
 because it cooperates with other programs and therefore also with the user.
 	... umm, and because i couldn't come up with a better name
@@ -8,11 +9,13 @@ asking you for password, managing your authenticated session or storing
 pictures of cute cats securely is broken by design.
 
 A few notes for start:
+	currently, passwords are the only encrypted data in the wallet
 	cpk is currently regarded as prototype only and highly experimental
 	db schema is very likely to change in the future
 	if you do want use cpk, you are advised to use vcs on the wallet after every use of cpk
 
-==== How does it work? ====
+How does it work?
+=================
 
 The idea is essentialy that any password can be attached to a leaf node in
 a tree where the path from root node to the leaf node accurately identifies any
@@ -24,49 +27,51 @@ Assumptions we do are optional, unobtrusive and configurable (or will be).
 It does not do any encryption/decryption by itself. It uses only your existing
 infrastructure to do this. However, currently is supported only gnupg.
 
-=== Fundamental data ===
-What we actually need to store is
-	(resource_id, password) tuple
+Fundamental data
+================
+| What we actually need to store is
+|	(resource_id, password) tuple
+|
+| where
+|	password is just a string
+|	resource_id
+|		may be
+|			completely arbitraty id
+|			(url,username) tuple
+|
+|		is n-tuple of strings
+|		provides flexibility for unusual use cases as long as they can be represented by a n-tuple
 
-where
-* password is just a string
-* resource_id
-** may be
-*** completely arbitraty id
-*** (url,username) tuple
-		
-** is
-*** n-tuple of strings
+So how do you use it?
+=====================
 
-** provides flexibility for unusual use cases as long as they can be represented by a n-tuple
+| To generate and store a new password for something interesting
+|	cpk new something interesting
+|
+| You say, you already have a password?
+| just follow with a
+|	echo "password" | cpk set something interesting
+| or use
+|	echo "password" | cpk new --stdin something interesting
+| instead
+|
+| How about an url?
+| It really doesnt matter, the resource_id can be arbitrary. However, for forward
+| compatibility with a planned formfiller it is a good idea to have urls in a common
+| "namespace" and keep in one format, like so
+|	cpk get url com domain username
+|
+| But I have multiple accounts there!
+|	cpk get url com domain other_username
+|
+| I also want to store information about how to retrieve the password just in case.
+| Currently, that's what attributes are for.
+|	cpk new -a retrieval_email
+|	echo "trojita@blesmrt.net" | cpk set -a retrieval_email url com domain user
+|	cpk get -a retrieval_email url com domain user
 
-=== So how do you use it? ===
-
-To store a password for something interesting
-	cpk new something interesting
-
-You say, you already have a password?
-just follow with a
-	echo "password" | cpk set something interesting
-or use
-	echo "password" | cpk new --stdin something interesting
-
-How about an url?
-It really doesnt matter, the resource_id can be arbitrary. But for forward
-compatibility with a planned formfiller it is a good idea to have urls in a common
-namespace and keep in one format, like so
-	cpk get url com domain username
-
-But I have multiple accounts there!
-	cpk get url com domain other_username
-
-But I also want to store information about how to retrieve the password just in case.
-Currently, that's what attributes are for.
-
-	cpk new -a retrieval_email
-	echo "trojita@blesmrt.net" | cpk set -a retrieval_email url com domain user
-
-==== TODO ====
+TODO
+====
 rename/del command
 
 paths aliasing
