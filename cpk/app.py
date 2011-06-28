@@ -56,6 +56,9 @@ def arg_parser(**kwargs):
     ps['list'] = subp.add_parser('list')
     ps['list'].add_argument('-a','--attribute',required=False,action='store_true')
 
+
+    ps['info'] = subp.add_parser('info')
+
     [add_gp(ps[i]) for i in ["get","set","new"]]
 
     return p
@@ -104,8 +107,7 @@ class App(object):
         c.app = self
         return c
 
-    def _init_db(self):
-        from model import init_db
+    def _get_db(self):
         db = self.conf.get('main','db')
         if not db == ':memory:':
             from xdg.BaseDirectory import save_data_path
@@ -113,7 +115,11 @@ class App(object):
             res_data_path = save_data_path(self.xdg_resource)
             db = join(res_data_path,db)
 
-        init_db(db)
+        return db
+
+    def _init_db(self):
+        from model import init_db
+        init_db(self._get_db())
 
     def __call__(self):
         self._init_db()
