@@ -70,6 +70,13 @@ So how do you use it?
 |	echo "trojita@blesmrt.net" | cpk set -a retrieval_email url com domain user
 |	cpk get -a retrieval_email url com domain user
 
+DEPENDENCIES
+============
+| py-gnupg ( http://py-gnupg.sourceforge.net/ )
+| sqlalchemy ( http://py-gnupg.sourceforge.net/ ) developed on 0.6
+| argparse ( http://pypi.python.org/pypi/argparse )
+| pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
+
 TODO
 ====
 rename/del command
