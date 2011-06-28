@@ -4,23 +4,24 @@ because it cooperates with other programs and therefore also with the user.
 	... umm, and because i couldn't come up with a better name
 
 A "generic" password keeper that offers/requires you to do the encryption,
-asking you for password/managing your authentication session or storing
+asking you for password, managing your authenticated session or storing
 pictures of cute cats securely is broken by design.
+
+A few notes for start:
+	cpk is currently regarded as prototype only and highly experimental
+	db schema is very likely to change in the future
+	if you do want use cpk, you are advised to use vcs on the wallet after every use of cpk
 
 ==== How does it work? ====
 
 The idea is essentialy that any password can be attached to a leaf node in
 a tree where the path from root node to the leaf node accurately identifies any
-kind of resource the password belongs to while making no assumptions about the
+kind of resource the password belongs to while making very little assumptions about the
 nodes semantic.
 
-Well, that's not really true, we do some assumptions but they are optional,
-unobtrusive and configurable (or will be).
+Assumptions we do are optional, unobtrusive and configurable (or will be).
 
-That makes You in charge of the semantic in the sense that cpk includes built
-in support for urls which you _may_ use, but you _dont have to_
-
-It does no any encryption/decryption by itself. It uses only your existing
+It does not do any encryption/decryption by itself. It uses only your existing
 infrastructure to do this. However, currently is supported only gnupg.
 
 === Fundamental data ===
@@ -46,11 +47,13 @@ To store a password for something interesting
 
 You say, you already have a password?
 just follow with a
-	echo "password" | set something interesting
+	echo "password" | cpk set something interesting
+or use
+	echo "password" | cpk new --stdin something interesting
 
 How about an url?
 It really doesnt matter, the resource_id can be arbitrary. But for forward
-compatibility with a formfiller it is a good idea to have urls in a common
+compatibility with a planned formfiller it is a good idea to have urls in a common
 namespace and keep in one format, like so
 	cpk get url com domain username
 
@@ -58,7 +61,7 @@ But I have multiple accounts there!
 	cpk get url com domain other_username
 
 But I also want to store information about how to retrieve the password just in case.
-That's what attributes are for.
+Currently, that's what attributes are for.
 
 	cpk new -a retrieval_email
 	echo "trojita@blesmrt.net" | cpk set -a retrieval_email url com domain user
