@@ -15,20 +15,19 @@ class ShouldbeEmpty(Exception):
     pass
 
 class TestClass(unittest.TestCase):
-    @staticmethod
-    def config():
-        return join(abspath(dirname(__file__)),"config.ini")
-
     def cpk(self):
         return join(abspath(dirname(dirname(__file__))),"cpk.py")
 
     def assertEmpty(self,v):
         if not v == "":
+            print v
             raise ShouldbeEmpty(v)
 
     def app(self,cmd):
         if type(cmd) is str:
             cmd = cmd.split(" ")
+
+        cmd.insert(0,self.cpk())
 
         p = Popen(cmd,0,stdin=PIPE,stderr=PIPE,stdout=PIPE)
         return p
@@ -37,7 +36,7 @@ class TestClass(unittest.TestCase):
         """
             cpk new ble smrt && cpk get ble smrt
         """
-        p = self.app([self.cpk(),"-c",TestClass.config(),"new","ble","smrt"])
+        p = self.app(["new","ble","smrt"])
         p.wait()
 
         o=p.stdout.read()
@@ -51,7 +50,7 @@ class TestClass(unittest.TestCase):
 
         self.assertEmpty(e)
         
-        p = self.app(self.cpk()+" -c "+TestClass.config()+" get ble smrt")
+        p = self.app("get ble smrt")
         p.wait()
         o = p.stdout.read()
         e = p.stderr.read()
@@ -67,7 +66,7 @@ class TestClass(unittest.TestCase):
         # - the resource does not appear to be existing and so i written
         # why?
         from commands import ResourceExists
-        p = self.app([self.cpk(),"-c",TestClass.config(),"new","ble","smrt"])
+        p = self.app(["new","ble","smrt"])
         p.wait()
         o = p.stdout.read()
         e = p.stderr.read()
@@ -77,7 +76,7 @@ class TestClass(unittest.TestCase):
 
     def test_d(self):
         """ cpk new -a ble_attr"""
-        p = self.app(self.cpk()+" -c "+TestClass.config()+" new -a ble_attr")
+        p = self.app("new -a ble_attr")
         p.wait()
         o = p.stdout.read()
         e = p.stderr.read()
@@ -89,7 +88,7 @@ class TestClass(unittest.TestCase):
         """
             cpk new --stdin ble smrt2 && cpk get ble smrt2
         """
-        p = self.app([self.cpk(),"-c",TestClass.config(),"new","--stdin","ble","smrt2"])
+        p = self.app(["new","--stdin","ble","smrt2"])
         pwd = "he3"
         p.stdin.write(pwd+"\n")
         p.stdin.close()
@@ -100,7 +99,7 @@ class TestClass(unittest.TestCase):
         e = p.stderr.read()
         self.assertEmpty(e)
         
-        p = self.app(self.cpk()+" -c "+TestClass.config()+" get ble smrt2")
+        p = self.app("get ble smrt2")
         p.wait()
         o = p.stdout.read()
         o = o[:-1]
@@ -116,7 +115,7 @@ class TestClass(unittest.TestCase):
         """
             cpk set -a ble ble smrt && cpk get -a ble ble smrt
         """
-        p = self.app([self.cpk(),"-c",TestClass.config(),"set","-a","ble_attr","ble","smrt"])
+        p = self.app(["set","-a","ble_attr","ble","smrt"])
         attr = "keke"
         p.stdin.write(attr)
         p.stdin.close()
@@ -126,7 +125,7 @@ class TestClass(unittest.TestCase):
         e = p.stderr.read()
         self.assertEmpty(e)
 
-        p = self.app([self.cpk(),"-c",TestClass.config(),"get","-a","ble_attr","ble","smrt"])
+        p = self.app(["get","-a","ble_attr","ble","smrt"])
         p.wait()
         o = p.stdout.read()
         e = p.stderr.read()
@@ -137,7 +136,7 @@ class TestClass(unittest.TestCase):
     @staticmethod
     def tearDownClass():
         import os
-        os.remove("/tmp/test_cpk_wallet.asc")
+        os.remove("/home/yac/.local/yac_devel/cpk/wallet.asc")
  
 if __name__ == '__main__':
     unittest.main()

@@ -12,7 +12,7 @@ class ConfParser(ConfigParser):
             'encrypt':'on'},
         'main': {
             'password_generator': 'apg',
-            'db_path':expanduser('~/.config/cpk/wallet.asc'),
+            'db':'wallet.asc',
             'input_kill_0x0a': "on",
             'output_kill_0x0a': "on"}}
 
@@ -23,17 +23,12 @@ class ConfParser(ConfigParser):
         if path is not None:
             self.read([path])
 
-        lgr = getLogger("ConfigParser")
-
-
         for (s,kv) in self.defaults.iteritems():
             # set default values into config
-            lgr.debug(s)
             if not self.has_section(s):
                 self.add_section(s)
 
             for k, v in kv.iteritems():
-                lgr.debug("k: {0} v: {1}".format(k, v))
                 if not self.has_option(s,k): self.set(s,k,v)
 
 
@@ -41,12 +36,6 @@ from argparse import ArgumentParser as AP
 def arg_parser(**kwargs):
     kwargs["description"]="""A tool for accessing your gpg-secured passwords database"""
     p = AP(**kwargs)
-
-    p.add_argument('-d','--debug',action='store_true',required=False)
-    p.add_argument('-c','--config',type=str,required=False)
-    p.add_argument('--no-config',action='store_true',default=False,required=False)
-    p.add_argument('--input-kill-0x0a',action='store_false',default=None,required=False)
-    p.add_argument('--output-kill-0x0a',action='store_false',default=None,required=False)
 
     add_gp = lambda x: x.add_argument("nodes",type=str,metavar='node',nargs='+',help='in sequence forms a tree path identifying a resource with password')
 
@@ -73,6 +62,7 @@ def arg_parser(**kwargs):
 
 class App(object):
     conf_parser=ConfParser
+    xdg_resource = 'cpk'
 
     def __init__(self,argv):
         self._argv = argv
@@ -82,29 +72,7 @@ class App(object):
     def args(self):
         if self._args is None:
             p = arg_parser(prog=self._argv[0])
-            args = p.parse_args(self._argv[1:])
-
-            if args.no_config:
-                args.config = None
-            else:
-                cnf_path = None
-                if args.config:
-                    from os.path import isfile
-                    if not isfile(args.config):
-                        print "config does not exists"
-                        exit(1)
-
-                    cnf_path = args.config
-
-                if cnf_path is None :
-                    if args.debug:
-                        cnf_path = '~/.config/cpk/development.ini'
-                    else:
-                        cnf_path = '~/.config/cpk/config.ini'
-
-                args.config = expanduser(cnf_path)
-
-            self._args = args
+            self._args = p.parse_args(self._argv[1:])
 
         return self._args
 
@@ -112,33 +80,21 @@ class App(object):
     @property
     def conf(self):
         if self._cnf is None:
+            from xdg.BaseDirectory import load_first_config
+            log_cnf = load_first_config(self.xdg_resource,"logging.ini")
+            if log_cnf is None:
+                raise Exception("no logging.ini")
+                # FIXME handle this
+
             from logging.config import fileConfig
-            if self.args.config is not None:
-                fileConfig(self.args.config)
+            fileConfig(log_cnf)
 
-            from logging import getLogger
-            lgr = getLogger('cpk.args')
-            lgr.debug(self.args)
+            cnf = load_first_config("cpk","config.ini")
+            if cnf is None:
+                raise Exception("no config.ini")
 
-            self._cnf = self.conf_parser(self.args.config)
-            self.conf_after_load()
-
+            self._cnf = self.conf_parser(cnf)
         return self._cnf
-
-    def conf_after_load(self):
-        # load some configs and set them into args if not set
-        # the other way around may be better:
-        #   simple rule: if an option can be in config, use it from config
-        #   argparser could show reasonable defaults
-        #   there would be no "race condition" as in - have config already been loaded or are we getting data from argparser only?
-        for _type,opts in {bool: {"main":["input_kill_0x0a","output_kill_0x0a"]}}.iteritems():
-            for section,names in opts.iteritems():
-                [setattr(self._args,name,self.conf.getboolean(section,name)) for name in names if _type is bool and getattr(self._args,name) is None]
-                    
-
-        from logging import getLogger
-        lgr = getLogger('cpk.args')
-        lgr.debug(self.args)
 
     _command_prefix = "commands."
     def command(self):
@@ -150,7 +106,14 @@ class App(object):
 
     def _init_db(self):
         from model import init_db
-        init_db(self.conf.get('main','db_path'))
+        db = self.conf.get('main','db')
+        if not db == ':memory:':
+            from xdg.BaseDirectory import save_data_path
+            from os.path import join
+            res_data_path = save_data_path(self.xdg_resource)
+            db = join(res_data_path,db)
+
+        init_db(db)
 
     def __call__(self):
         self._init_db()

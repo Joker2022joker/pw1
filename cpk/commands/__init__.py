@@ -37,12 +37,12 @@ class Command(object):
     def input(self):
         import sys
         input=sys.stdin.read()
-        if not self.app.args.input_kill_0x0a or not input[:-1] == "\n":
+        if not self.conf.getboolean('main','input_kill_0x0a') or not input[:-1] == "\n":
             return input
         return input[:-1]
 
     def output(self,s):
-        if not self.app.args.output_kill_0x0a:
+        if not self.conf.getboolean('main','output_kill_0x0a'):
             print s
         else:
             import sys
