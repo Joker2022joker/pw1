@@ -15,7 +15,8 @@ class ShouldbeEmpty(Exception):
     pass
 
 class TestClass(unittest.TestCase):
-    def cpk(self):
+    @staticmethod
+    def cpk():
         return join(abspath(dirname(dirname(__file__))),"cpk.py")
 
     def assertEmpty(self,v):
@@ -23,7 +24,8 @@ class TestClass(unittest.TestCase):
             print v
             raise ShouldbeEmpty(v)
 
-    def app(self,cmd):
+    @classmethod
+    def s_app(self,cmd):
         if type(cmd) is str:
             cmd = cmd.split(" ")
 
@@ -31,6 +33,9 @@ class TestClass(unittest.TestCase):
 
         p = Popen(cmd,0,stdin=PIPE,stderr=PIPE,stdout=PIPE)
         return p
+
+    def app(self,cmd):
+        return TestClass.s_app(cmd)
 
     def test_a(self):
         """
@@ -133,10 +138,13 @@ class TestClass(unittest.TestCase):
         o = o[:-1]
         assert(o==attr)
 
-    @staticmethod
-    def tearDownClass():
+    @classmethod
+    def tearDownClass(self):
         import os
-        os.remove("/home/yac/.local/yac_devel/cpk/wallet.asc")
+        p = self.s_app("info")
+        o = p.stdout.read()
+        m = re.search(r'^db:\t(.+)$',o)
+        os.remove(m.groups()[0])
  
 if __name__ == '__main__':
     unittest.main()
