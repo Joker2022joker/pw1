@@ -55,6 +55,8 @@ def arg_parser(**kwargs):
 
     ps['list'] = subp.add_parser('list')
     ps['list'].add_argument('-a','--attribute',required=False,action='store_true')
+    ps['list'].add_argument("nodes",type=str,metavar='node',nargs='*',help='in sequence forms a tree path identifying a resource')
+
 
 
     ps['info'] = subp.add_parser('info')
@@ -123,6 +125,5 @@ class App(object):
 
     def __call__(self):
         self._init_db()
-        # ^ this also ensures config has been read before calling the command
         c = self.command()
         c()
