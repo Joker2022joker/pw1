@@ -7,33 +7,27 @@ from sqlalchemy import create_engine, select, case, func
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, MapperExtension, aliased, backref
 from sqlalchemy.ext.declarative import declarative_base as d_b, declared_attr 
 from sqlalchemy import Integer,Boolean,String,Text, Column, ForeignKey, BLOB
+from sqlalchemy.schema import Table
 
 Base = d_b()
 
 session = None
 
-class NestedSetExtension(MapperExtension):
-    def before_insert(self, mapper, connection, instance):
-        if not instance.parent:
-            instance.parent_id = None
-        else:
-            instance.parent_id = instance.parent.id
-
+nodes_to_nodes = Table('nodes_m2m', Base.metadata,
+    Column('parent_id', Integer, ForeignKey('nodes.id')),
+    Column('child_id', Integer, ForeignKey('nodes.id'))
+)
 
 class Node(Base):
     __tablename__ = 'nodes'
-    __mapper_args__ = {
-        "extension":NestedSetExtension(),
-        'batch':False
-    }
 
-    parent_id = Column(Integer,ForeignKey('nodes.id'))
     id = Column(Integer, primary_key=True)
+    attribute_id = Column(Integer,ForeignKey('attributes.id'))
     name = Column(String(256))
-    password_id = Column(Integer,ForeignKey('passwords.id'))
 
-    children = relationship("Node",backref=backref('parent',remote_side=id))
-    password = relationship("Password",backref=backref("nodes",uselist=False))
+    children = relationship("Node",
+                    secondary=nodes_to_nodes,
+                    backref="parents")
 
     @staticmethod
     def get(nodes,create=False):
@@ -69,32 +63,13 @@ class Node(Base):
 
         return g
 
-class Password(Base):
-    __tablename__ = 'passwords'
-    id = Column(Integer,primary_key=True)
-    password = Column(BLOB)
-
-    @staticmethod
-    def get(node,create=False):
-        g = Node.get(node,create)
-
-        if g.password_id:
-           return session.query(Password).filter_by(id=g.password_id).one()
-
-        if create:
-            p = Password()
-            g.password = p
-            session.add(g)
-            return p
-
-        raise NoPass()
-
 
 class Attribute(Base):
     __tablename__ = 'attributes'
 
     id = Column(Integer,primary_key=True)
     name = Column(String(256),unique=True)
+    short_name = Column(String(16),unique=True)
 
     @staticmethod
     def get(name):
@@ -111,27 +86,6 @@ class Attribute(Base):
         except sa.orm.exc.NoResultFound:
             return
 
-class AttributeValue(Base):
-    __tablename__ = 'attr_values'
-    node_id = Column(Integer,ForeignKey('nodes.id'),primary_key=True)
-    attr_id = Column(Integer,ForeignKey('attributes.id'),primary_key=True)
-    value = Column(String(256))
-
-    @staticmethod
-    def get(attribute,node,create=False):
-        attribute = Attribute.get(attribute)
-        node = Node.get(node)
-
-        try:
-           return session.query(AttributeValue).filter_by(node_id=node.id,attr_id=attribute.id).one()
-        except sa.orm.exc.NoResultFound:
-            if not create:
-                raise NoAttrValue()
-
-            av = AttributeValue()
-            av.node_id = node.id
-            av.attr_id = attribute.id
-            return av
 
 class NoNode(Exception):
     pass
