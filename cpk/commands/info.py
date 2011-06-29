@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import Password, AttributeValue
 
 class Command(IFace):
     def _run(self,args):
