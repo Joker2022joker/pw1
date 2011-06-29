@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace, ResourceExists
-from model import Node, Password, session, Attribute
+from model import Node, session, Attribute
 
 class Command(IFace):
     def new_pwd(self):
@@ -19,12 +19,17 @@ class Command(IFace):
 
         if args.attribute:
             a = Attribute()
-            a.name = args.nodes[0]
+            a.name = args.nodes.pop()
 
-            Attribute.check_not_existing(a.name)
+            if not args.nodes == []:
+                a.descrption = args.nodes.pop()
 
             session.add(a)
-            session.commit()
+            from sqlalchemy.exc import IntegrityError
+            try:
+                session.commit()
+            except IntegrityError:
+                self.die("IntegrityError, attribute name not unique?")
 
         else:
             p = Password.get(args.nodes,create=True)
