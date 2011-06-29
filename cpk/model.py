@@ -8,6 +8,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, relationship, MapperExt
 from sqlalchemy.ext.declarative import declarative_base as d_b, declared_attr 
 from sqlalchemy import Integer,Boolean,String,Text, Column, ForeignKey, BLOB
 from sqlalchemy.schema import Table
+from logging import getLogger
 
 Base = d_b()
 
@@ -18,47 +19,78 @@ class Node(Base):
 
     id = Column(Integer, primary_key=True)
     attribute_id = Column(Integer,ForeignKey('attributes.id'))
-    name = Column(String(256))
+    value = Column(String(256),nullable=False)
 
     def higher_neighbors(self):
-        return [x.higher_node for x in self.lower_edges]
+        parents = [x.higher_node for x in self.lower_edges]
+        if parents is None or parents == [None]:
+            raise NoNode()
+        return parents
 
     def lower_neighbors(self):
-        return [x.lower_node for x in self.higher_edges]
+        children = [x.lower_node for x in self.higher_edges]
+        if children is None or children == [None]:
+            # ^ FIXME: this is weird
+            raise NoNode()
+        return children
 
-    @staticmethod
-    def get(nodes,create=False):
-        global session
-        if type(nodes) is not list:
-            return nodes
+    def __repr__(self):
+        return "<%s_%s_%s_%s>" % (self.__class__.__name__, self.id, self.attribute_id, self.value)
 
-        g = parent_id = parent =None
+    @classmethod
+    def root(self):
+        from sqlalchemy.orm.exc import NoResultFound
+        try:
+            return session.query(self).filter_by(id=1).one()
+            # ^ FIXME: determine root node in a better way
+        except NoResultFound:
+            root = self()
+            root.id = 1
+            root.value = ""
+            session.add(root)
+            session.commit()
+            return root
 
-        create_new = False
-        while len(nodes) > 0:
-            # ^ FIXME: this and the whole while is probably counter-intuitive and just "wrong"
-            i = nodes.pop(0)
+    def get_lower(self,node):
+        for i in self.lower_neighbors():
+            if i.attribute is None and i.value == node[1]:
+                return i
+
+        raise NoNode(node)
+
+    def add_child(self,node):
+        e =Edge(self,node)
+        session.add(e)
+
+    def add_parent(self,node):
+        Edge(node,self)
+
+    @classmethod
+    def get(self,nodes,create=False):
+#        if type(nodes) is not list:
+#            return nodes
+
+        last_node = self.root()
+        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(last_node)
+
+        while not nodes == []:
+            look_for = nodes.pop(0)
+            getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(look_for)
+
             try:
-                if create_new:
-                    raise sa.orm.exc.NoResultFound()
-                sql = session.query(Node).filter_by(name=i,parent_id=parent_id)
-                g = sql.one()
-                parent_id = g.id
-            except sa.orm.exc.NoResultFound:
+                last_node = last_node.get_lower(look_for[1])
+            except NoNode:
                 if not create:
-                    raise NoNode()
+                    raise
 
-                if g is not None:
-                    parent = g
-                g = Node()
-                g.name = i
-                if parent is not None:
-                    parent.children.append(g)
-                else:
-                    g.parent_id = None
-                session.add(g)
+                new_node = Node()
+                new_node.value = look_for[1]
+                last_node.add_child(new_node)
+                last_node = new_node
+                session.add(last_node)
 
-        return g
+        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(repr(last_node))
+        return last_node
 
 class Edge(Base):
     __tablename__ = 'edges'
@@ -89,6 +121,8 @@ class Attribute(Base):
     id = Column(Integer,primary_key=True)
     name = Column(String(16),unique=True,nullable=False)
     description = Column(String(256))
+
+    nodes = relationship(Node, backref='attribute')
 
     @staticmethod
     def get(name):
