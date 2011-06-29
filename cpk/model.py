@@ -97,15 +97,6 @@ class Attribute(Base):
 
         return name
 
-    @staticmethod
-    def check_not_existing(name):
-        try:
-            Attribute.get(name)
-            raise UniquenessFail()
-        except sa.orm.exc.NoResultFound:
-            return
-
-
 class NoNode(Exception):
     pass
 
@@ -113,9 +104,6 @@ class NoPass(Exception):
     pass
     
 class NoAttrValue(Exception):
-    pass
-
-class UniquenessFail(Exception):
     pass
 
 def init_db(db_path):
