@@ -87,8 +87,8 @@ class Attribute(Base):
     __tablename__ = 'attributes'
 
     id = Column(Integer,primary_key=True)
-    name = Column(String(256),unique=True)
-    short_name = Column(String(16),unique=True)
+    name = Column(String(16),unique=True,nullable=False)
+    description = Column(String(256))
 
     @staticmethod
     def get(name):
