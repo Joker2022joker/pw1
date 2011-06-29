@@ -1,74 +1,30 @@
-Cooperative Password Keeper
-===========================
-
-because it cooperates with other programs and therefore also with the user.
-	... umm, and because i couldn't come up with a better name
-
-A "generic" password keeper that offers/requires you to do the encryption,
-asking you for password, managing your authenticated session or storing
-pictures of cute cats securely is broken by design.
-
-A few notes for start:
-	currently, passwords are the only encrypted data in the wallet
-	cpk is currently regarded as prototype only and highly experimental
-	db schema is very likely to change in the future
-	if you do want use cpk, you are advised to use vcs on the wallet after every use of cpk
-
-How does it work?
-=================
-
-The idea is essentialy that any password can be attached to a leaf node in
-a tree where the path from root node to the leaf node accurately identifies any
-kind of resource the password belongs to while making very little assumptions about the
-nodes semantic.
-
-Assumptions we do are optional, unobtrusive and configurable (or will be).
-
-It does not do any encryption/decryption by itself. It uses only your existing
-infrastructure to do this. However, currently is supported only gnupg.
-
 Fundamental data
 ================
-| What we actually need to store is
-|	(resource_id, password) tuple
+| Basicly we need to store (resource_id,password)
+|   where
+|       resource_id = 1*n (attribute name)
 |
-| where
-|	password is just a string
-|	resource_id
-|		may be
-|			completely arbitraty id
-|			(url,username) tuple
+| Node = (name, attribute)
+|   where
+|       name = ALPHA | DIGIT
+|       type = attribute
+|   
+| Attribute = (name,type)
+|    where
+|       name = ALPHA | DIGIT
+|       short_name = ALPHA | DIGIT
+|       type = "chained" | "additional" ;
+|           ; chained may follow each other
+|           ; additional must occur only once on a path
+|           ; this may be completely replaced with parent type restrictions
 |
-|		is n-tuple of strings
-|		provides flexibility for unusual use cases as long as they can be represented by a n-tuple
-
-So how do you use it?
-=====================
-
-| To generate and store a new password for something interesting
-|	cpk new something interesting
+|   can be eg.
+|       chained = [arbitrary_resource,domain]
+|       additional = [user,scheme,attribute]
 |
-| You say, you already have a password?
-| just follow with a
-|	echo "password" | cpk set something interesting
-| or use
-|	echo "password" | cpk new --stdin something interesting
-| instead
-|
-| How about an url?
-| It really doesnt matter, the resource_id can be arbitrary. However, for forward
-| compatibility with a planned formfiller it is a good idea to have urls in a common
-| "namespace" and keep in one format, like so
-|	cpk get url com domain username
-|
-| But I have multiple accounts there!
-|	cpk get url com domain other_username
-|
-| I also want to store information about how to retrieve the password just in case.
-| Currently, that's what attributes are for.
-|	cpk new -a retrieval_email
-|	echo "trojita@blesmrt.net" | cpk set -a retrieval_email url com domain user
-|	cpk get -a retrieval_email url com domain user
+| Then we can have graphs
+|   arbitrary_resource -> arbitratry_resource -> password
+|   arbitrary_resource -> domain -> domain -> domain -> scheme -> user -> password
 
 DEPENDENCIES
 ============
@@ -77,8 +33,27 @@ DEPENDENCIES
 | argparse ( http://pypi.python.org/pypi/argparse )
 | pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
 
+Implementation notes
+====================
+get -a
+    may specify target attribute we are looking for so it can be used regardless of attribute
+aliases
+    special attribute alias that does not manifest in the entered path, it only points to another node
+attributes could be restricted to be allowed only to follow certain types of attributes
+    eg. most attributes cant follow password but attribute eg. "comment" could
+
+
 TODO
 ====
+automatic aliasing
+    eg. lets consider graph
+        org1 - "urls" - domain1
+        org2 - "urls" - domain2
+
+    then we want to have automatic aliases
+        urls - domain1 -> org1 - urls domain1
+        urls - domain2 -> org2 - urls domain2
+
 rename/del command
 
 paths aliasing
