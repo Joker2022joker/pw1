@@ -4,6 +4,7 @@
 from ConfigParser import SafeConfigParser as ConfigParser
 from os.path import expanduser
 from logging import getLogger
+from xdg.BaseDirectory import load_first_config
 
 class ConfParser(ConfigParser):
     # FIXME i couldnt get the constructor to accept defaults in any way
@@ -71,6 +72,7 @@ class App(object):
 
     def __init__(self,argv):
         self._argv = argv
+        self.__init_logging()
     
     _args = None
     @property
@@ -79,21 +81,39 @@ class App(object):
             p = arg_parser(prog=self._argv[0])
             self._args = p.parse_args(self._argv[1:])
 
+            self._init_db()
+
+            import re
+            from model import Attribute, session
+            attrs = [i.short_name for i in session.query(Attribute).all()]
+            
+            sre_parse_nodes = '^((?P<node_type>%s)=)?(?P<node_name>[a-zA-Z0-9]+)$' % "|".join(attrs)
+            getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(sre_parse_nodes)
+            sre_parse_nodes = re.compile(sre_parse_nodes)
+
+            if self._args.nodes is not None:
+                new_nodes = [sre_parse_nodes.match(i).groupdict().values()
+                    for i in self._args.nodes]
+                # ^ FIXME raises AttributeError on syntax error
+                getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(new_nodes)
+                self._args.nodes = new_nodes
+
         return self._args
+
+    def __init_logging(self):
+        log_cnf = load_first_config(self.xdg_resource,"logging.ini")
+        if log_cnf is None:
+            raise Exception("no logging.ini")
+            # FIXME handle this
+
+        from logging.config import fileConfig
+        fileConfig(log_cnf)
+        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("logging init")
 
     _cnf = None
     @property
     def conf(self):
         if self._cnf is None:
-            from xdg.BaseDirectory import load_first_config
-            log_cnf = load_first_config(self.xdg_resource,"logging.ini")
-            if log_cnf is None:
-                raise Exception("no logging.ini")
-                # FIXME handle this
-
-            from logging.config import fileConfig
-            fileConfig(log_cnf)
-
             cnf = load_first_config("cpk","config.ini")
             if cnf is None:
                 raise Exception("no config.ini")
@@ -124,6 +144,5 @@ class App(object):
         init_db(self._get_db())
 
     def __call__(self):
-        self._init_db()
         c = self.command()
         c()
