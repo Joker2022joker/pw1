@@ -35,17 +35,15 @@ DEPENDENCIES
 
 Implementation notes
 ====================
-sqlalchemy already has some support for graphs
-
 get -a
     may specify target attribute we are looking for so it can be used regardless of attribute
 
 aliases
     special attribute alias that does not manifest in the entered path, it only points to another node
-    or type of many-to-many relationship of nodes
-        so relationships could be 
+    or type of an edge
+        so edge could be 
             default:   child follows parent
-            alias:      parent points to child
+            alias:      parent points to child which should be used as for next lower neighbor lookup
 
 attributes could be restricted to be allowed only to follow certain types of attributes
     eg. most attributes cant follow password but attribute eg. "comment" could
