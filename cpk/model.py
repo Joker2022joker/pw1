@@ -13,11 +13,6 @@ Base = d_b()
 
 session = None
 
-nodes_to_nodes = Table('nodes_m2m', Base.metadata,
-    Column('parent_id', Integer, ForeignKey('nodes.id')),
-    Column('child_id', Integer, ForeignKey('nodes.id'))
-)
-
 class Node(Base):
     __tablename__ = 'nodes'
 
@@ -25,9 +20,11 @@ class Node(Base):
     attribute_id = Column(Integer,ForeignKey('attributes.id'))
     name = Column(String(256))
 
-    children = relationship("Node",
-                    secondary=nodes_to_nodes,
-                    backref="parents")
+    def higher_neighbors(self):
+        return [x.higher_node for x in self.lower_edges]
+
+    def lower_neighbors(self):
+        return [x.lower_node for x in self.higher_edges]
 
     @staticmethod
     def get(nodes,create=False):
@@ -62,6 +59,28 @@ class Node(Base):
                 session.add(g)
 
         return g
+
+class Edge(Base):
+    __tablename__ = 'edges'
+
+    lower_id = Column(Integer, 
+                        ForeignKey('nodes.id'), 
+                        primary_key=True)
+
+    higher_id = Column(Integer, 
+                        ForeignKey('nodes.id'), 
+                        primary_key=True)
+
+    lower_node = relationship(Node,
+                                primaryjoin=lower_id==Node.id, 
+                                backref='lower_edges')
+    higher_node = relationship(Node,
+                                primaryjoin=higher_id==Node.id, 
+                                backref='higher_edges')
+
+    def __init__(self, higher, lower):
+        self.lower_node = lower
+        self.higher_node = higher
 
 
 class Attribute(Base):
