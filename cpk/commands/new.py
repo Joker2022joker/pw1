@@ -32,20 +32,27 @@ class Command(IFace):
                 self.die("IntegrityError, attribute name not unique?")
 
         else:
-            p = Password.get(args.nodes,create=True)
+            Node.get(self.tokenize_nodes(),create=True)
 
-            if p.password is not None and p.password is not '':
-                # if there is password and it is non-empty string
-                if not args.force:
-                    # do nothing, unless user enforces overriding
-                    raise ResourceExists()
 
+            passwd = Node()
+            passwd.attribute = Attribute.get('password')
+            # ^ FIXME: hardcoded
+
+#            p = Password.get(args.nodes,create=True)
+#
+#            if p.password is not None and p.password is not '':
+#                # if there is password and it is non-empty string
+#                if not args.force:
+#                    # do nothing, unless user enforces overriding
+#                    raise ResourceExists()
+#
             if args.stdin:
                 pwd = self.input()
             else:
                 pwd = self.new_pwd()
 
-            p.password = self.encrypt(pwd)
+            passwd.value = self.encrypt(pwd)
             session.commit()
 
             if not args.stdin:
