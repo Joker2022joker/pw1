@@ -2,18 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import NoNode, Password, Node, session, AttributeValue, Attribute
+from model import NoNode, Node, session, Attribute
 import sys
 
 class Command(IFace):
     def _run(self,args):
-        if args.attribute:
-            av = AttributeValue.get(args.attribute,args.nodes,create=True)
-            av.value = self.input()
-            session.add(av)
-        else:
-            p = Password.get(args.nodes)
-            p.password = self.encrypt(self.input())
-            session.add(p)
+        filters = self.tokens_2_filters(self.tokenize_nodes())
 
+        n = Node.get(filters)
+
+        n.value = self.encrypt(self.input())
         session.commit()
