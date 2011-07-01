@@ -30,6 +30,9 @@ class Command(object):
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(tokens)
         return tokens
 
+    def tokens_2_filters(self,tokens):
+        return map(lambda (x,y): {"attr":x, "node":y}, tokens)
+
     @property
     def conf(self):
         return self.app.conf

@@ -8,15 +8,15 @@ from model import Attribute, session, Node
 class Command(IFace):
     def children(self):
         if not self.args.nodes:
-            return Node.root().lower_neighbors()
+            return Node.root().lower()
 
-        return Node.get(self.tokenize_nodes()).lower_neighbors()
+        return Node.get(self.tokens_2_filters(self.tokenize_nodes())).lower()
 
     def _run(self,args):
         if self.args.attribute:
              return [ print(i.name) for i in session.query(Attribute).all()]
            
-        rs = [ (i.attr().name, i.value) for i in self.children() ]
+        rs = [ (i.attr.name, i.value) for i in self.children() ]
 
         if not rs:
             return

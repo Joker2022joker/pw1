@@ -37,7 +37,49 @@ class TestClass(unittest.TestCase):
     def app(self,cmd):
         return TestClass.s_app(cmd)
 
-    def test_a(self):
+    def test_me(self):
+        ms = range(0,6)
+
+        for x in ms:
+            m_ = "part_%s"  % x
+            if hasattr(self,m_):
+                print "running %s" % x
+                getattr(self,"part_"+str(x))()
+            else:
+                print "missing %s" % x
+
+    def part_0(self):
+        """ cpk new -a ble_attr"""
+        p = self.app("new -a ble_attr")
+        p.wait()
+        o = p.stdout.read()
+        e = p.stderr.read()
+
+        self.assertEmpty(o)
+        self.assertEmpty(e)
+
+        # ^ make sure adding attribute works
+        # and then init db
+
+        p = self.app("new -a password").wait()
+        p = self.app("new -a default").wait()
+        # ^ init hardcoded attributes
+
+        from xdg.BaseDirectory import save_data_path
+        from os.path import join
+        res_data_path = save_data_path('cpk')
+        db = join(res_data_path,'wallet.asc')
+
+        import sqlite3
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+        c.execute("insert into nodes values (NULL,NULL,'root')")
+        # ^ init hardcoded root
+        conn.commit()
+        c.close()
+        conn.close()
+
+    def part_1(self):
         """
             cpk new ble smrt && cpk get ble smrt
         """
@@ -65,7 +107,7 @@ class TestClass(unittest.TestCase):
 
         self.assertEmpty(e)
 
-    def test_c(self):
+    def part_3(self):
         """ cpk new ble smrt on existing resource"""
         # ^ this does not work as a separate test
         # - the resource does not appear to be existing and so i written
@@ -79,17 +121,7 @@ class TestClass(unittest.TestCase):
         self.assertEmpty(o)
         assert(re.search(r'raise ResourceExists\(\)',e) is not None)
 
-    def test_d(self):
-        """ cpk new -a ble_attr"""
-        p = self.app("new -a ble_attr")
-        p.wait()
-        o = p.stdout.read()
-        e = p.stderr.read()
-
-        self.assertEmpty(o)
-        self.assertEmpty(e)
-
-    def test_b(self):
+    def part_2(self):
         """
             cpk new --stdin ble smrt2 && cpk get ble smrt2
         """
@@ -116,7 +148,7 @@ class TestClass(unittest.TestCase):
 
         self.assertEmpty(e)
 
-    def test_e(self):
+    def part_5(self):
         """
             cpk set -a ble ble smrt && cpk get -a ble ble smrt
         """

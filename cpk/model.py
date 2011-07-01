@@ -21,19 +21,6 @@ class Node(Base):
     attribute_id = Column(Integer,ForeignKey('attributes.id'))
     value = Column(String(256),nullable=False)
 
-    def higher_neighbors(self):
-        parents = [x.higher_node for x in self.lower_edges]
-        if parents is None or parents == [None]:
-            raise NoNode()
-        return parents
-
-    def lower_neighbors(self):
-        children = [x.lower_node for x in self.higher_edges]
-        if children is None or children == [None]:
-            # ^ FIXME: this is weird
-            raise NoNode()
-        return children
-
     def __repr__(self):
         return "<%s_%s_%s_%s>" % (self.__class__.__name__, self.id, self.attribute_id, self.value)
 
@@ -51,14 +38,26 @@ class Node(Base):
             session.commit()
             return root
 
-    def get_lower(self,node):
-        attr_name, node_value = node
+    def lower(self, **kwargs):
+        return self._get('lower', **kwargs)
 
-        for i in self.lower_neighbors():
-            if i.attribute is None and i.value == node[1]:
-                return i
+    def higher(self, **kwargs):
+        return self._get('higher', **kwargs)
 
-        raise NoNode(node)
+    def _get(self,dir,attr=None,node=None):
+        edges = "%s_%s" % (dir,'edges')
+        edge_attr = "%s_%s" % (dir, "node")
+        nodes = [getattr(x,edge_attr) for x in getattr(self,edges)]
+
+        if attr is None and node is None:
+            return nodes
+
+        if attr:
+            filter = lambda x: x.attr.name == attr
+        else:
+            filter = lambda x: x.value == node
+
+        return [ x for x in nodes if filter(x) ]
 
     def add_child(self,node):
         e =Edge(self,node)
@@ -68,40 +67,39 @@ class Node(Base):
         Edge(node,self)
 
     @property
-    def attr(self):
+    def attr(node):
         """
-            Always returns attribute
+            Always returns an Attribute
 
-            If node has no attribute, the default one is returned
+            If node has no attribute, default Attribute is returned
         """
-        if self.attribute:
-            return self.attribute
+        if node.attribute:
+            return node.attribute
         
-        return Attribute.default
+        return Attribute.default()
 
     @classmethod
-    def get(self,nodes,create=False):
-#        if type(nodes) is not list:
-#            return nodes
-
+    def get(self,filters,create=False):
         last_node = self.root()
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(last_node)
 
-        while not nodes == []:
-            look_for = nodes.pop(0)
-            getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(look_for)
+        while filters:
+            filter = filters.pop(0)
 
-            try:
-                last_node = last_node.get_lower(look_for)
-            except NoNode:
-                if not create:
-                    raise
+            last_node_p = last_node.lower(**filter)
 
+            if last_node_p:
+                last_node = last_node_p[0]
+            elif create:
                 new_node = Node()
-                new_node.value = look_for[1]
+                new_node.value = filter['node']
+                if filter['attr']:
+                    new_node.attribute = Attribute.get(filter['attr'])
+
                 last_node.add_child(new_node)
                 last_node = new_node
                 session.add(last_node)
+            else:
+                raise NoNode()
 
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(repr(last_node))
         return last_node
@@ -119,10 +117,10 @@ class Edge(Base):
 
     lower_node = relationship(Node,
                                 primaryjoin=lower_id==Node.id, 
-                                backref='lower_edges')
+                                backref='higher_edges')
     higher_node = relationship(Node,
                                 primaryjoin=higher_id==Node.id, 
-                                backref='higher_edges')
+                                backref='lower_edges')
 
     def __init__(self, higher, lower):
         self.lower_node = lower
@@ -140,7 +138,7 @@ class Attribute(Base):
 
     @staticmethod
     def default():
-        return Attribute.get('ble')
+        return Attribute.get('default')
         # ^ FIXME: hardcoded
 
     @staticmethod

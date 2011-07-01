@@ -2,13 +2,20 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import Password, AttributeValue
+from model import Attribute, Node
 
 class Command(IFace):
+    def attribute(self):
+        a = Attribute.get(self.args.nodes[0])
+        print a.name
+
     def _run(self,args):
-        if args.attribute:
-            av = AttributeValue.get(args.attribute,args.nodes)
-            print av.value
-        else:
-            pwd = Password.get(args.nodes)
-            self.output(self.decrypt(pwd.password))
+        if self.args.attribute:
+            return self.attribute()
+
+        filters = self.tokens_2_filters(self.tokenize_nodes())
+        filters.append({'attr':'password'})
+        # ^ FIXME: hardcoded
+
+        pwd = Node.get(filters)
+        self.output(self.decrypt(pwd.value))
