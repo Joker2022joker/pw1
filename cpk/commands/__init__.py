@@ -35,6 +35,10 @@ class Command(object):
         return self.app.conf
 
     @property
+    def args(self):
+        return self.app.args
+
+    @property
     def __u(self):
         import utils
         return utils

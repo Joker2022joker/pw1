@@ -52,6 +52,8 @@ class Node(Base):
             return root
 
     def get_lower(self,node):
+        attr_name, node_value = node
+
         for i in self.lower_neighbors():
             if i.attribute is None and i.value == node[1]:
                 return i
@@ -64,6 +66,18 @@ class Node(Base):
 
     def add_parent(self,node):
         Edge(node,self)
+
+    @property
+    def attr(self):
+        """
+            Always returns attribute
+
+            If node has no attribute, the default one is returned
+        """
+        if self.attribute:
+            return self.attribute
+        
+        return Attribute.default
 
     @classmethod
     def get(self,nodes,create=False):
@@ -78,7 +92,7 @@ class Node(Base):
             getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(look_for)
 
             try:
-                last_node = last_node.get_lower(look_for[1])
+                last_node = last_node.get_lower(look_for)
             except NoNode:
                 if not create:
                     raise
@@ -123,6 +137,11 @@ class Attribute(Base):
     description = Column(String(256))
 
     nodes = relationship(Node, backref='attribute')
+
+    @staticmethod
+    def default():
+        return Attribute.get('ble')
+        # ^ FIXME: hardcoded
 
     @staticmethod
     def get(name):
