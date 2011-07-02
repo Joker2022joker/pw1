@@ -7,9 +7,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 class Command(IFace):
     def _run(self,args):
-        if self.args.attribute:
-            return self.attribute()
-
         filters = self.tokens_2_filters(self.tokenize_nodes())
 
         if filters[-1]['node']:

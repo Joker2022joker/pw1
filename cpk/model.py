@@ -47,8 +47,11 @@ class Node(Base):
         edge_attr = "%s_%s" % (dir, "node")
         nodes = [getattr(x,edge_attr) for x in getattr(self,edges)]
 
-        if attr is None and node is None:
+        if not attr and not node:
             return nodes
+
+        if attr.__class__ == Attribute:
+            attr = attr.name
 
         if not node:
             filter = lambda x: x.attr.name == attr
@@ -86,8 +89,8 @@ class Node(Base):
         while filters:
             filter = filters.pop(0)
 
-            if filter['attr'].__class__ is Attribute:
-                filter['attr'] = filter['attr'].name
+#            if filter['attr'].__class__ is Attribute:
+#                filter['attr'] = filter['attr'].name
 
             matching_nodes = last_node.lower(**filter)
 
@@ -99,9 +102,16 @@ class Node(Base):
                 last_node = matching_nodes[0]
             elif create:
                 new_node = Node()
-                new_node.value = filter['node']
+                if filter.has_key('node'):
+                    new_node.value = filter['node']
+
+
+                getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(filter)
                 if filter['attr']:
-                    new_node.attribute = Attribute.get(filter['attr'])
+                    if not filter['attr'].__class__ is Attribute:
+                        filter['attr'] = Attribute.get(filter['attr'])
+
+                    new_node.attribute = filter['attr']
 
                 last_node.add_child(new_node)
                 last_node = new_node
@@ -159,6 +169,15 @@ class Attribute(Base):
            return session.query(Attribute).filter_by(name=name).one()
 
         return name
+
+    @property
+    def generator(self):
+        """ Returns value generator or None """
+
+        if self.name == self.magic_password_id:
+            return True
+
+        return None
 
     @classmethod
     def password(self):
