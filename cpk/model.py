@@ -33,7 +33,7 @@ class Node(Base):
         except NoResultFound:
             root = self()
             root.id = 1
-            root.value = ""
+            root.value = "root"
             session.add(root)
             session.commit()
             return root
@@ -154,6 +154,13 @@ class Attribute(Base):
            return session.query(Attribute).filter_by(name=name).one()
 
         return name
+
+    @classmethod
+    def password(self):
+        """ returns special attribute password """
+        return self.get('password')
+        # ^ FIXME: hardcoded
+
 
 class NoNode(Exception):
     pass
