@@ -65,20 +65,6 @@ class TestClass(unittest.TestCase):
         p = self.app("new -a default").wait()
         # ^ init hardcoded attributes
 
-        from xdg.BaseDirectory import save_data_path
-        from os.path import join
-        res_data_path = save_data_path('cpk')
-        db = join(res_data_path,'wallet.asc')
-
-        import sqlite3
-        conn = sqlite3.connect(db)
-        c = conn.cursor()
-        c.execute("insert into nodes values (NULL,NULL,'root')")
-        # ^ init hardcoded root
-        conn.commit()
-        c.close()
-        conn.close()
-
     def part_1(self):
         """
             cpk new ble smrt && cpk get ble smrt
@@ -91,6 +77,8 @@ class TestClass(unittest.TestCase):
 
         m = re.match(r'^[a-zA-Z]{3}$',o)
         if m is None:
+            print o
+            print e
             raise Exception(o)
 
         expect = o
@@ -109,9 +97,7 @@ class TestClass(unittest.TestCase):
 
     def part_3(self):
         """ cpk new ble smrt on existing resource"""
-        # ^ this does not work as a separate test
-        # - the resource does not appear to be existing and so i written
-        # why?
+
         from commands import ResourceExists
         p = self.app(["new","ble","smrt"])
         p.wait()
@@ -139,20 +125,22 @@ class TestClass(unittest.TestCase):
         p = self.app("get ble smrt2")
         p.wait()
         o = p.stdout.read()
-        o = o[:-1]
+        #o = o[:-1]
         # ^ there should not be a newline but the cpk uses correctly write(), why is that?
         e = p.stderr.read()
 
         if not pwd == o:
+            print pwd
+            print o
             raise Exception("getted value doesnt correspond to newed value")
 
         self.assertEmpty(e)
 
     def part_5(self):
         """
-            cpk set -a ble ble smrt && cpk get -a ble ble smrt
+            cpk new ble smrt ble_attr= && cpk get ble smrt ble_attr=
         """
-        p = self.app(["set","-a","ble_attr","ble","smrt"])
+        p = self.app(["new","ble","smrt","ble_attr="])
         attr = "keke"
         p.stdin.write(attr)
         p.stdin.close()
@@ -162,20 +150,19 @@ class TestClass(unittest.TestCase):
         e = p.stderr.read()
         self.assertEmpty(e)
 
-        p = self.app(["get","-a","ble_attr","ble","smrt"])
+        p = self.app(["get","ble","smrt","ble_attr="])
         p.wait()
         o = p.stdout.read()
         e = p.stderr.read()
         self.assertEmpty(e)
-        o = o[:-1]
         assert(o==attr)
 
     @classmethod
     def tearDownClass(self):
         import os
         p = self.s_app("info")
-        o = p.stdout.read()
-        m = re.search(r'^db:\t(.+)$',o)
+        o = p.stdout.read().split("\n")
+        m = re.match(r'^db:\t(.+)$',o[0])
         db = m.groups()[0]
         check = '/tmp/cpk/'
         if len(db) > len(check) and db[0:len(check)] == check:
