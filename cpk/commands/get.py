@@ -6,10 +6,6 @@ from model import Attribute, Node
 from sqlalchemy.orm.exc import NoResultFound
 
 class Command(IFace):
-    def attribute(self):
-        a = Attribute.get(self.args.nodes[0])
-        print a.name
-
     def _run(self,args):
         if self.args.attribute:
             return self.attribute()
