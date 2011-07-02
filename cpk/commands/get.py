@@ -14,8 +14,12 @@ class Command(IFace):
             return self.attribute()
 
         filters = self.tokens_2_filters(self.tokenize_nodes())
-        filters.append({'attr':'password'})
-        # ^ FIXME: hardcoded
 
-        pwd = Node.get(filters)
-        self.output(self.decrypt(pwd.value))
+        if filters[-1]['node']:
+            filters.append({'attr':'password'})
+            # ^ FIXME: hardcoded
+            # append filter for goal we want to retrieve unless it has been specified by the user as last node
+
+        goal = Node.get(filters)
+
+        self.output(self.decrypt(goal.value))
