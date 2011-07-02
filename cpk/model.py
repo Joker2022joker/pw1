@@ -1,16 +1,15 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sqlalchemy as sa
-from sqlalchemy import create_engine, select, case, func
-
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, MapperExtension, aliased, backref
-from sqlalchemy.ext.declarative import declarative_base as d_b, declared_attr 
 from sqlalchemy import Integer,Boolean,String,Text, Column, ForeignKey, BLOB
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.schema import Table
+
 from logging import getLogger
 
-Base = d_b()
+Base = declarative_base()
 
 session = None
 
@@ -26,7 +25,6 @@ class Node(Base):
 
     @classmethod
     def root(self):
-        from sqlalchemy.orm.exc import NoResultFound
         try:
             return session.query(self).filter_by(id=1).one()
             # ^ FIXME: determine root node in a better way
@@ -82,10 +80,14 @@ class Node(Base):
 
     @classmethod
     def get(self,filters,create=False):
+        """ Get exactly one node identified by filters which translates to a unique path in the graph """
         last_node = self.root()
 
         while filters:
             filter = filters.pop(0)
+
+            if filter['attr'].__class__ is Attribute:
+                filter['attr'] = filter['attr'].name
 
             matching_nodes = last_node.lower(**filter)
 
@@ -143,6 +145,9 @@ class Attribute(Base):
 
     nodes = relationship(Node, backref='attribute')
 
+    magic_password_id = 'password'
+    # ^ FIXME: hardcoded, should be read from config
+
     @staticmethod
     def default():
         return Attribute.get('default')
@@ -157,9 +162,24 @@ class Attribute(Base):
 
     @classmethod
     def password(self):
-        """ returns special attribute password """
-        return self.get('password')
-        # ^ FIXME: hardcoded
+        """ returns special attribute password or None if not configured """
+        if not self.magic_password_id:
+            return None
+
+        try:
+            return self.get(self.magic_password_id)
+        except NoResultFound:
+            a = Attribute()
+            a.name = self.magic_password_id
+            session.add(a)
+            return a
+
+    @property
+    def one_per_higher_node(self):
+        """
+            Return True if the type is required to be only one per higher node
+        """
+        return self.name == self.magic_password_id
 
 
 class NoNode(Exception):
@@ -174,6 +194,9 @@ class NoAttrValue(Exception):
 def init_db(db_path):
     global session
     from os.path import expanduser
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import scoped_session, sessionmaker
+
     db_path = expanduser(db_path)
     e =create_engine("sqlite+pysqlite:///"+db_path)
     session = scoped_session(sessionmaker(bind=e, autoflush=True))
