@@ -52,10 +52,12 @@ class Node(Base):
         if attr is None and node is None:
             return nodes
 
-        if attr:
+        if not node:
             filter = lambda x: x.attr.name == attr
-        else:
+        elif not attr:
             filter = lambda x: x.value == node
+        else:
+            filter = lambda x: x.value == node and x.attr.name == attr
 
         return [ x for x in nodes if filter(x) ]
 
@@ -85,10 +87,14 @@ class Node(Base):
         while filters:
             filter = filters.pop(0)
 
-            last_node_p = last_node.lower(**filter)
+            matching_nodes = last_node.lower(**filter)
 
-            if last_node_p:
-                last_node = last_node_p[0]
+            if matching_nodes:
+                if len(matching_nodes) > 1:
+                    from exc import MatchedMultiple
+                    raise MatchedMultiple(matching_nodes,last_node)
+
+                last_node = matching_nodes[0]
             elif create:
                 new_node = Node()
                 new_node.value = filter['node']
@@ -103,6 +109,7 @@ class Node(Base):
 
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(repr(last_node))
         return last_node
+
 
 class Edge(Base):
     __tablename__ = 'edges'
