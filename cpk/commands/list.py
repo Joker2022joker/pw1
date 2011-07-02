@@ -4,13 +4,18 @@
 from __future__ import print_function
 from . import Command as IFace
 from model import Attribute, session, Node
+import exc
 
 class Command(IFace):
     def children(self):
         if not self.args.nodes:
             return Node.root().lower()
-
-        return Node.get(self.tokens_2_filters(self.tokenize_nodes())).lower()
+        try:
+            return Node.get(self.tokens_2_filters(self.tokenize_nodes())).lower()
+        except exc.MatchedMultiple as e:
+            import sys
+            print("Couldnt match exactly, listing node: %s %s" % (e.last.attr.name, e.last.value), file=sys.stderr)
+            return e.matched
 
     def _run(self,args):
         if self.args.attribute:
