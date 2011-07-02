@@ -1,5 +1,6 @@
 Fundamental data
 ================
+
 | Basicly we need to store (resource_id,password)
 |   where
 |       resource_id = 1*n ( Node )
@@ -33,6 +34,7 @@ DEPENDENCIES
 | argparse ( http://pypi.python.org/pypi/argparse )
 | pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
 
+
 Implementation notes
 ====================
 get -a
@@ -50,6 +52,13 @@ attributes could be restricted to be allowed only to follow certain types of att
 
 TODO
 ====
+Use DFS for the first ordered part and BFS for the second unordered
+
+Passwords of different strengths could be generated
+    eg. some passwords is good to remember well
+    
+    this would require having Attributes Inheration and configurable Value Generator per Attribute
+
 automatic aliasing
     eg. lets consider graph
         org1 - "urls" - domain1
@@ -59,7 +68,7 @@ automatic aliasing
         urls - domain1 -> org1 - urls domain1
         urls - domain2 -> org2 - urls domain2
 
-rename/del command
+move/rename/del command
 
 paths aliasing
 	eg. path "url com example www john_doe" can also be accessed with path "iana ldap john_doe"
@@ -89,3 +98,10 @@ use fixtures in tests instead of realying on their order
 simply rules for accessing args/config
 
 figure out how to encrypt whole db on exit and decrypt the db on start of program and feed the decrypted data into memory db
+
+Try to use a graph lib for the heavy work [1]_
+
+Sources
+=======
+.. [1] http://wiki.python.org/moin/PythonGraphApi
+
