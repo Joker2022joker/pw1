@@ -11,7 +11,7 @@ from logging import getLogger
 
 Base = declarative_base()
 
-session = None
+session = app = None
 
 class Node(Base):
     __tablename__ = 'nodes'
@@ -155,13 +155,22 @@ class Attribute(Base):
 
     nodes = relationship(Node, backref='attribute')
 
-    magic_password_id = 'password'
-    # ^ FIXME: hardcoded, should be read from config
+    @classmethod
+    def magic_password_id(self):
+        return self.__get_conf('password')
 
-    @staticmethod
-    def default():
-        return Attribute.get('default')
-        # ^ FIXME: hardcoded
+    @classmethod
+    def __get_conf(self,name):
+        from ConfigParser import NoSectionError, NoOptionError
+        try:
+            return app.conf.get('attributes',name)
+        except NoSectionError, NoOptionError:
+            return None
+
+    @classmethod
+    def default(self):
+        name = self.__get_conf('default')
+        return Attribute.get(name)
 
     @staticmethod
     def get(name):
@@ -174,7 +183,7 @@ class Attribute(Base):
     def generator(self):
         """ Returns value generator or None """
 
-        if self.name == self.magic_password_id:
+        if self.name == self.magic_password_id():
             return True
 
         return None
@@ -182,14 +191,14 @@ class Attribute(Base):
     @classmethod
     def password(self):
         """ returns special attribute password or None if not configured """
-        if not self.magic_password_id:
+        if not self.magic_password_id():
             return None
 
         try:
-            return self.get(self.magic_password_id)
+            return self.get(self.magic_password_id())
         except NoResultFound:
             a = Attribute()
-            a.name = self.magic_password_id
+            a.name = self.magic_password_id()
             session.add(a)
             return a
 
@@ -198,7 +207,7 @@ class Attribute(Base):
         """
             Return True if the type is required to be only one per higher node
         """
-        return self.name == self.magic_password_id
+        return self.name == self.magic_password_id()
 
 
 class NoNode(Exception):
@@ -210,8 +219,12 @@ class NoPass(Exception):
 class NoAttrValue(Exception):
     pass
 
-def init_db(db_path):
+def init_db(db_path,_app):
     global session
+    global app
+
+    app = _app
+
     from os.path import expanduser
     from sqlalchemy import create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker

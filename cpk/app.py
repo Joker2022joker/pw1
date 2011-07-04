@@ -123,7 +123,7 @@ class App(object):
 
     def _init_db(self):
         from model import init_db
-        init_db(self._get_db())
+        init_db(self._get_db(),self)
 
     def __call__(self):
         c = self.command()
