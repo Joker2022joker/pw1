@@ -20,7 +20,7 @@ class Command(object):
         from model import Attribute, session
         attrs = [i.name for i in session.query(Attribute).all()]
         
-        sre_parse_nodes = '^((?P<node_type>%s)=)?(?P<node_name>[a-zA-Z0-9]+)?$' % "|".join(attrs)
+        sre_parse_nodes = '^((?P<node_type>%s)=)?(?P<node_name>[a-zA-Z0-9@.-]+)?$' % "|".join(attrs)
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(sre_parse_nodes)
         sre_parse_nodes = re.compile(sre_parse_nodes)
 
