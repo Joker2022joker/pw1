@@ -75,7 +75,7 @@ class TestClass(unittest.TestCase):
         o=p.stdout.read()
         e = p.stderr.read()
 
-        m = re.match(r'^[a-zA-Z]{3}$',o)
+        m = re.match(r'^.{3}$',o)
         if m is None:
             print o
             print e
