@@ -43,19 +43,17 @@ def arg_parser(**kwargs):
     subp = p.add_subparsers(dest="command")
     ps = {}
     ps['get'] = subp.add_parser("get")
-    ps['get'].add_argument('-a','--attribute',type=str,required=False,help='gets an attribute of nodes')
 
     ps['set'] = subp.add_parser("set")
-    ps['set'].add_argument('-a','--attribute',type=str,required=False)
 
     ps['new'] = subp.add_parser("new")
 
     ps['new'].add_argument('-f','--force',help="force overwriting existing password with a new one and check the node path exists",action='store_true',required=False)
     ps['new'].add_argument('-a','--attribute',required=False,action='store_true',help='if used, node argument is used as name of new attribute')
-    ps['new'].add_argument('--stdin',required=False,action='store_true',help='do not generate new pwd but read it from stdin')
+    ps['new'].add_argument('--stdin',required=False,action='store_true',help='do not generate new value but read it from stdin, applicable only to node types that have a generator')
 
     ps['list'] = subp.add_parser('list')
-    ps['list'].add_argument('-a','--attribute',required=False,action='store_true')
+    ps['list'].add_argument('-a','--attribute',required=False,action='store_true',help='List node types')
     ps['list'].add_argument("nodes",type=str,metavar='node',nargs='*',help='in sequence forms a tree path identifying a resource')
 
 
