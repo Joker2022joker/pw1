@@ -95,8 +95,6 @@ write unit/integration tests
 
 use fixtures in tests instead of realying on their order
 
-simply rules for accessing args/config
-
 figure out how to encrypt whole db on exit and decrypt the db on start of program and feed the decrypted data into memory db
 
 Try to use a graph lib for the heavy work [1]_
