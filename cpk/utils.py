@@ -7,7 +7,7 @@ def get_gpg():
 
 def encrypt(s):
     gpg = get_gpg()
-    gpg_p = gpg.run(['-e'],create_fhs=['stdin','stdout'])
+    gpg_p = gpg.run(['-e','--armor'],create_fhs=['stdin','stdout'])
 
     gpg_p.handles['stdin'].write(s)
     gpg_p.handles['stdin'].close()
