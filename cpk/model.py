@@ -164,8 +164,12 @@ class Attribute(Base):
         from ConfigParser import NoSectionError, NoOptionError
         try:
             return app.conf.get('attributes',name)
-        except NoSectionError, NoOptionError:
-            return None
+        except (NoSectionError, NoOptionError):
+            class FakeDefaultAttr(object):
+                id = None
+                name = ''
+                description = None
+            return FakeDefaultAttr()
 
     @classmethod
     def default(self):
