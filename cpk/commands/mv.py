@@ -22,4 +22,7 @@ class Command(IFace):
         map(session.delete,goal.higher_edges)
         # ^ FIXME: there may be better solution via sqlalchemy
         session.delete(goal)
+        # ^ FIXME: this cant work when moving A B onto A B C
+        # also when A B C is moved onto A D, B may be also deleted if is leaf
+        # and is not attribute holding a value (eg. is not comment or password)
         session.commit()
