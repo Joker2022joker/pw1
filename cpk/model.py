@@ -53,12 +53,16 @@ class Node(Base):
         if attr.__class__ == Attribute:
             attr = attr.name
 
+        
+        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("%s %s"%(node,attr))
+
         if not node:
             filter = lambda x: x.attr.name == attr
         elif not attr:
             filter = lambda x: x.value == node
         else:
             filter = lambda x: x.value == node and x.attr.name == attr
+
 
         return [ x for x in nodes if filter(x) ]
 
@@ -117,11 +121,10 @@ class Node(Base):
                 last_node = new_node
                 session.add(last_node)
             else:
-                raise NoNode()
+                raise NoNode(filter)
 
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(repr(last_node))
         return last_node
-
 
 class Edge(Base):
     __tablename__ = 'edges'

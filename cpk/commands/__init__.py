@@ -16,20 +16,8 @@ class Command(object):
         raise NotImplemented
 
     def tokenize_nodes(self):
-        import re
-        from model import Attribute, session
-        attrs = [i.name for i in session.query(Attribute).all()]
-        
-        sre_parse_nodes = '^((?P<node_type>%s)=)?(?P<node_name>.+)?$' % "|".join(attrs)
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(sre_parse_nodes)
-        sre_parse_nodes = re.compile(sre_parse_nodes)
-
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("tokenizer input: %s" % self.app.args.nodes)
-        tokens = [sre_parse_nodes.match(i).groupdict().values()
-            for i in self.app.args.nodes]
-
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("tokens: %s" % tokens)
-        return tokens
+        from utils import tokenize_nodes
+        return tokenize_nodes(self.app.args.nodes)
 
     def tokens_2_filters(self,tokens):
         return map(lambda (x,y): {"attr":x, "node":y}, tokens)

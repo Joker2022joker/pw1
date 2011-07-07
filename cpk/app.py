@@ -60,7 +60,11 @@ def arg_parser(**kwargs):
 
     ps['info'] = subp.add_parser('info')
 
-    [add_gp(ps[i]) for i in ["get","set","new","rm"]]
+    ps['mv'] = subp.add_parser('mv',help='Move nodes onto --to nodes')
+
+    [add_gp(ps[i]) for i in ["get","set","new","rm",'mv']]
+
+    ps['mv'].add_argument('-t','--to',nargs='+',type=str)
 
     return p
 

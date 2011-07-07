@@ -9,15 +9,16 @@ class Command(IFace):
     def _run(self,args):
         filters = self.tokens_2_filters(self.tokenize_nodes())
 
-        # do not modify filters here
-        # in this command the path must be specified exactly
+        from utils import tokenize_nodes
+        to_filters = self.tokens_2_filters(tokenize_nodes(self.app.args.to))
 
         goal = Node.get(filters)
 
-        if not goal.lower() == []:
-            raise Exception('node is not leaf')
-            # ^ FIXME add -r option
-        
+        to = Node.get(to_filters,create=True)
+
+        for i in goal.lower_edges:
+            i.higher_node = to
+
         map(session.delete,goal.higher_edges)
         # ^ FIXME: there may be better solution via sqlalchemy
         session.delete(goal)

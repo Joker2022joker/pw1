@@ -89,6 +89,8 @@ DEPENDENCIES
 
 TODO
 ====
+"Ask before taking an action" option
+
 Use DFS for the first ordered part and BFS for the second unordered
 
 Passwords of different strengths could be generated
