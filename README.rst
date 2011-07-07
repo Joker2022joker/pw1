@@ -140,16 +140,18 @@ Try to use a graph lib for the heavy work [1]_
 
 Implementation notes, drafts, etc
 ==================================
-aliases
-    special attribute alias that does not manifest in the entered path, it only points to another node
-    or type of an edge
-        so edge could be 
-            default:   child follows parent
-            alias:      parent points to child which should be used as for next lower neighbor lookup
-    update: actually there is probably no need to do anything complicated, just create an edge
+::
 
-attributes could be restricted to be allowed only to follow certain types of attributes
-    eg. most attributes cant follow password but attribute eg. "comment" could
+    aliases
+        special attribute alias that does not manifest in the entered path, it only points to another node
+        or type of an edge
+            so edge could be 
+                default: child follows parent
+                alias:      parent points to child which should be used as for next lower neighbor lookup
+        update: actually there is probably no need to do anything complicated, just create an edge
+
+    attributes could be restricted to be allowed only to follow certain types of attributes
+        eg. most attributes cant follow password but attribute eg. "comment" could
 
 Sources
 =======
