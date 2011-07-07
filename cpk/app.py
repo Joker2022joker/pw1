@@ -56,11 +56,11 @@ def arg_parser(**kwargs):
     ps['list'].add_argument('-a','--attribute',required=False,action='store_true',help='List node types')
     ps['list'].add_argument("nodes",type=str,metavar='node',nargs='*',help='in sequence forms a tree path identifying a resource')
 
-
+    ps['rm'] = subp.add_parser('rm')
 
     ps['info'] = subp.add_parser('info')
 
-    [add_gp(ps[i]) for i in ["get","set","new"]]
+    [add_gp(ps[i]) for i in ["get","set","new","rm"]]
 
     return p
 
