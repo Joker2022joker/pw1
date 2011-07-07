@@ -26,7 +26,7 @@ def decrypt(enc):
 
     gpg_p.handles['stdin'].close()
 
-    decr = gpg_p.handles['stdout'].read()[:-1]
+    decr = gpg_p.handles['stdout'].read()
     gpg_p.handles['stdout'].close()
     gpg_p.wait()
     
