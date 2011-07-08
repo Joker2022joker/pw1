@@ -95,6 +95,8 @@ pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
 
 TODO
 ====
+    Switch to markdown
+
     "Ask before taking an action" option
 
     Use DFS for the first ordered part and BFS for the second unordered
@@ -147,14 +149,12 @@ TODO
 Implementation notes, drafts, etc
 ==================================
     aliases
-        special attribute alias that does not manifest in the entered path, it only points to another node
-        or type of an edge
+        just creating an edge as an alias wont do as if we had A - B - C and D - E where B would have an edge to E, A - B - E - X and D - E - X would resolve to the same object.
+        Thats not what i am looking for.
 
-            so edge could be 
-                default: child follows parent
-                alias:   parent points to child which should be used as for next lower neighbor lookup
+        Aliases is rather external to the graph. It is list of tuple (node A, node B) saying that when a child of A occurs, it should also be child of B
 
-        update: actually there is probably no need to do anything complicated, just create an edge
+
 
     attributes could be restricted to be allowed only to follow certain types of attributes
         eg. most attributes cant follow password but attribute eg. "comment" could
