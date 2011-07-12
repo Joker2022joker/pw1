@@ -86,6 +86,32 @@ So how do you use it?
         echo "trojita@blesmrt.net" | cpk new --stdin url com domain user retrieval_email=
         cpk get url com domain user retrieval_email=
 
+Command Types
+=============
+Commands can be separated to those which
+    create filters just from command line node path
+        These translates node path as expected
+        
+        these are:
+            mv
+            rm
+            list
+            set
+
+    attach attribute_type filter
+        these are little tricky in that if node path does not end with attr= a filter is added to get commonly wanted result
+        so if you wanna go for the password, but identify the last node just by attribute type, you need to specify password_type= explicitly
+
+        these are:
+            new <nodes> 
+                default password_attr= is attached when searching for the goal node
+
+            get <nodes>
+                an empty filter is added, which means getting the next child of the node path specified (currently assumes password has no siblings)
+
+    not applicable to:
+        info
+
 DEPENDENCIES
 ============
 py-gnupg ( http://py-gnupg.sourceforge.net/ )
@@ -95,6 +121,11 @@ pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
 
 TODO
 ====
+    consistency
+        same things, usage depends on context:
+            nodes, filters
+            attributes, node types
+
     Switch to markdown
 
     "Ask before taking an action" option
