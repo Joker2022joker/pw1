@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 import cpk
 
 setup(
@@ -10,5 +10,11 @@ setup(
     description='Password Manager storing data in gnupg encrypted graph',
     author='Jan Matejka',
     author_email='yac@blesmrt.net',
-    url='https://github.com/yaccz/cpk'
+    url='https://github.com/yaccz/cpk',
+    scripts=['cpk/cpk.py'],
+
+    packages = find_packages(
+        where = '.'
+    ),
+
 )
