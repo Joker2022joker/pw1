@@ -76,7 +76,7 @@ class App(object):
         self._argv = argv
         self.__init_logging()
         self._init_db()
-    
+
     _args = None
     @property
     def args(self):
@@ -132,3 +132,7 @@ class App(object):
     def __call__(self):
         c = self.command()
         c()
+
+def main():
+    from sys import argv
+    App(argv)()

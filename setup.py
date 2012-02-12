@@ -11,7 +11,6 @@ setup(
     author='Jan Matejka',
     author_email='yac@blesmrt.net',
     url='https://github.com/yaccz/cpk',
-    scripts=['cpk/cpk.py'],
 
     packages = find_packages(
         where = '.'
@@ -23,5 +22,8 @@ setup(
         "sqlalchemy",
         "argparse",
         "pyxdg",
-    ]
+    ],
+
+    entry_points={
+        'console_scripts': ['cpk = cpk.app:main']},
 )
