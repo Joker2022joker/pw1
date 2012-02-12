@@ -18,12 +18,15 @@ setup(
 
     install_requires = [
         "setuptools",
-        "python-gnupg",
         "sqlalchemy",
         "argparse",
         "pyxdg",
     ],
 
-    entry_points={
+    extras_require = {
+        'python_gnupg': ["python-gnupg"],
+    },
+
+    entry_points = {
         'console_scripts': ['cpk = cpk.app:main']},
 )
