@@ -126,7 +126,7 @@ class App(object):
         return db
 
     def _init_db(self):
-        from model import init_db
+        from cpk.model import init_db
         init_db(self._get_db(),self)
 
     def __call__(self):

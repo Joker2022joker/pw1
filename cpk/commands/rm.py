@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import Node, session
+from cpk.model import Node, session
 from sqlalchemy.orm.exc import NoResultFound
 
 class Command(IFace):
@@ -17,7 +17,7 @@ class Command(IFace):
         if not goal.lower() == []:
             raise Exception('node is not leaf')
             # ^ FIXME add -r option
-        
+
         map(session.delete,goal.higher_edges)
         # ^ FIXME: there may be better solution via sqlalchemy
         session.delete(goal)

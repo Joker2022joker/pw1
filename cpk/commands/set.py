@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import NoNode, Node, session, Attribute
+from cpk.model import NoNode, Node, session, Attribute
 import sys
 
 class Command(IFace):

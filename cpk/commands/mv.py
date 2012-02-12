@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import Node, session
+from cpk.model import Node, session
 from sqlalchemy.orm.exc import NoResultFound
 
 class Command(IFace):
     def _run(self,args):
         filters = self.tokens_2_filters(self.tokenize_nodes())
 
-        from utils import tokenize_nodes
+        from cpk.utils import tokenize_nodes
         to_filters = self.tokens_2_filters(tokenize_nodes(self.app.args.to))
 
         goal = Node.get(filters)

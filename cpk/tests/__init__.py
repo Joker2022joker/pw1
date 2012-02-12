@@ -8,7 +8,7 @@ import re
 from os.path import dirname,abspath,join
 sys.path.insert(0,abspath(dirname(dirname(__file__))))
 
-from app import App,ConfParser
+from cpk.app import App,ConfParser
 
 from subprocess import Popen,PIPE
 class ShouldbeEmpty(Exception):
@@ -84,7 +84,7 @@ class TestClass(unittest.TestCase):
         expect = o
 
         self.assertEmpty(e)
-        
+
         p = self.app("get ble smrt")
         p.wait()
         o = p.stdout.read()
@@ -98,7 +98,7 @@ class TestClass(unittest.TestCase):
     def part_3(self):
         """ cpk new ble smrt on existing resource"""
 
-        from commands import ResourceExists
+        from cpk.commands import ResourceExists
         p = self.app(["new","ble","smrt"])
         p.wait()
         o = p.stdout.read()
@@ -121,7 +121,7 @@ class TestClass(unittest.TestCase):
 
         e = p.stderr.read()
         self.assertEmpty(e)
-        
+
         p = self.app("get ble smrt2")
         p.wait()
         o = p.stdout.read()
@@ -167,6 +167,6 @@ class TestClass(unittest.TestCase):
         check = '/tmp/cpk/'
         if len(db) > len(check) and db[0:len(check)] == check:
             os.remove(db)
- 
+
 if __name__ == '__main__':
     unittest.main()

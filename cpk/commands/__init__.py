@@ -16,7 +16,7 @@ class Command(object):
         raise NotImplemented
 
     def tokenize_nodes(self):
-        from utils import tokenize_nodes
+        from cpk.utils import tokenize_nodes
         return tokenize_nodes(self.app.args.nodes)
 
     def tokens_2_filters(self,tokens):
@@ -32,8 +32,8 @@ class Command(object):
 
     @property
     def __u(self):
-        import utils
-        return utils
+        import cpk.utils
+        return cpk.utils
 
     def encrypt(self,p):
         if not self.conf.getboolean('debug','encrypt'):
