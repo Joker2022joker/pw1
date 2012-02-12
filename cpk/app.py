@@ -88,12 +88,11 @@ class App(object):
 
     def __init_logging(self):
         log_cnf = load_first_config(self.xdg_resource,"logging.ini")
-        if log_cnf is None:
-            raise Exception("no logging.ini")
-            # FIXME handle this
 
-        from logging.config import fileConfig
-        fileConfig(log_cnf)
+        if log_cnf is not None:
+            from logging.config import fileConfig
+            fileConfig(log_cnf)
+
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("logging init")
 
     _cnf = None
