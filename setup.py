@@ -17,4 +17,11 @@ setup(
         where = '.'
     ),
 
+    install_requires = [
+        "setuptools",
+        "python-gnupg",
+        "sqlalchemy",
+        "argparse",
+        "pyxdg",
+    ]
 )
