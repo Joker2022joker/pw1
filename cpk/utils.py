@@ -3,36 +3,64 @@
 
 from logging import getLogger
 
-def get_gpg():
-    import GnuPGInterface as gnupg
-    return gnupg.GnuPG()
+class PythonGnupg:
+    """Cryptography adapter for gnupg using python-gnupg project"""
+
+    @property
+    def _gpg(self):
+        import gnupg
+        return gnupg.GPG()
+
+    def encrypt(self, s):
+        # doesnt seem to be working with defalt-recipient-self
+        return str(self._gpg.encrypt(s, None))
+        # ^ FIXME: this needs to be configurable
+
+    def decrypt(self, s):
+        return str(self._gpg.decrypt(s))
+
+class PyGnupg:
+    """Cryptography adapter for gnupg using py-gnupg project"""
+
+    @property
+    def _gpg(self):
+        import GnuPGInterface
+        return GnuPGInterface.GnuPG()
+
+    def encrypt(self, s):
+        gpg = self._gpg
+        gpg_p = gpg.run(['-e','--armor'],create_fhs=['stdin','stdout'])
+
+        gpg_p.handles['stdin'].write(s)
+        gpg_p.handles['stdin'].close()
+
+        enc = gpg_p.handles['stdout'].read()
+        gpg_p.handles['stdout'].close()
+
+        gpg_p.wait()
+
+        return enc
+
+    def decrypt(enc):
+        gpg = self._gpg
+        gpg_p = gpg.run(['-d','--no-tty'],create_fhs=['stdin','stdout','stderr'])
+        gpg_p.handles['stdin'].write(enc)
+
+        gpg_p.handles['stdin'].close()
+
+        decr = gpg_p.handles['stdout'].read()
+        gpg_p.handles['stdout'].close()
+        gpg_p.wait()
+
+        return decr
+
+impl = PyGnupg()
 
 def encrypt(s):
-    gpg = get_gpg()
-    gpg_p = gpg.run(['-e','--armor'],create_fhs=['stdin','stdout'])
-
-    gpg_p.handles['stdin'].write(s)
-    gpg_p.handles['stdin'].close()
-
-    enc = gpg_p.handles['stdout'].read()
-    gpg_p.handles['stdout'].close()
-
-    gpg_p.wait()
-
-    return enc
+    return impl.encrypt(s)
 
 def decrypt(enc):
-    gpg = get_gpg()
-    gpg_p = gpg.run(['-d','--no-tty'],create_fhs=['stdin','stdout','stderr'])
-    gpg_p.handles['stdin'].write(enc)
-
-    gpg_p.handles['stdin'].close()
-
-    decr = gpg_p.handles['stdout'].read()
-    gpg_p.handles['stdout'].close()
-    gpg_p.wait()
-
-    return decr
+    return impl.decrypt(enc)
 
 def tokenize_nodes(nodes):
     """
