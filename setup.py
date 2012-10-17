@@ -27,6 +27,11 @@ setup(
         'python_gnupg': ["python-gnupg"],
     },
 
+    package_data = {
+        #"example_configs": [ "*" ]
+        '': [ '*.ini' ]
+    },
+
     entry_points = {
         'console_scripts': ['cpk = cpk.app:main']},
 )
