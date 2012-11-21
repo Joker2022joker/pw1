@@ -83,6 +83,14 @@ Commands can be separated to those which
 
 TODO
 ====
+	storage
+		using XML file(s) could be natural as
+			* this way, we get full encryption
+			* our attributes would map nicely on xml attribute(s)
+			* searching through the file might leverage some xml utility, even the interface might reflect this (so no new things to learn for those already knowing the xml querying or something)
+
+	provide a way to re-encrypt all data
+
     consistency
         same things, usage depends on context:
             nodes, filters
