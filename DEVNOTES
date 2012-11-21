@@ -33,7 +33,7 @@ Fundamental data
       where
           name = ALPHA | DIGIT
           type = Attribute.id
-      
+
     Attribute = (name,type)
        where
             name = ALPHA | DIGIT
@@ -53,45 +53,14 @@ Fundamental data
       arbitrary_resource -> domain -> domain -> domain -> scheme -> user -> password
 
 .. ffs, why does there has to be empty line to get rid off README.rst:42: (ERROR/3) Unexpected indentation.
-   and why 
-
-So how do you use it?
-=====================
-
-    To generate and store a new password for something interesting
-        cpk new something interesting
-
-    You say, you already have a password?
-    just follow with a
-
-        echo "password" | cpk set something interesting
-
-    or use
-        echo "password" | cpk new --stdin something interesting
-
-    instead
-
-    How about an url?
-    It really doesnt matter, the resource_id can be arbitrary. However, for forward
-    compatibility with a planned formfiller it is a good idea to have urls in a common
-    "namespace" and keep in one format, like so
-
-        cpk get url com domain username
-
-    But I have multiple accounts there!
-        cpk get url com domain other_username
-
-    I also want to store information about how to retrieve the password just in case.
-        cpk new -a retrieval_email
-        echo "trojita@blesmrt.net" | cpk new --stdin url com domain user retrieval_email=
-        cpk get url com domain user retrieval_email=
+   and why
 
 Command Types
 =============
 Commands can be separated to those which
     create filters just from command line node path
         These translates node path as expected
-        
+
         these are:
             mv
             rm
@@ -103,7 +72,7 @@ Commands can be separated to those which
         so if you wanna go for the password, but identify the last node just by attribute type, you need to specify password_type= explicitly
 
         these are:
-            new <nodes> 
+            new <nodes>
                 default password_attr= is attached when searching for the goal node
 
             get <nodes>
@@ -111,13 +80,6 @@ Commands can be separated to those which
 
     not applicable to:
         info
-
-DEPENDENCIES
-============
-py-gnupg ( http://py-gnupg.sourceforge.net/ )
-sqlalchemy ( http://py-gnupg.sourceforge.net/ ) developed on 0.6
-argparse ( http://pypi.python.org/pypi/argparse )
-pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
 
 TODO
 ====
@@ -134,7 +96,7 @@ TODO
 
     Passwords of different strengths could be generated
         eg. some passwords is good to remember well
-        
+
         this would require having Attributes Inheration and configurable Value Generator per Attribute
 
     automatic aliasing
