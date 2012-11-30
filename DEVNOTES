@@ -147,6 +147,8 @@ TODO
 
     Try to use a graph lib for the heavy work [1]_
 
+	Ability to differentiate between different networks, for urls and such?
+
 Implementation notes, drafts, etc
 ==================================
     aliases
