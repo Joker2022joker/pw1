@@ -138,11 +138,7 @@ class TestClass(unittest.TestCase):
         # ^ there should not be a newline but the cpk uses correctly write(), why is that?
         e = p.stderr.read()
 
-        if not pwd == o:
-            print pwd
-            print o
-            raise Exception("getted value doesnt correspond to newed value")
-
+        self.assertEqual(pwd, o)
         self.assertEmpty(e)
 
     def part_5(self):
