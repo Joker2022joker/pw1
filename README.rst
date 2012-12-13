@@ -6,50 +6,87 @@ An Awesome Password Keeper
 
 Features
 =========
-* CPK itself is just a simple python CLI user-interface for password storage, encryption and generation
-* Password encrypting with your favorite encryption method
-* Password generating with your favorite generator
-* That's right, it doesn't care about shit. Just configure your backends
+* Simplicity
+    * CPK is just a CLI user-interface for password storage, cryptography and generation
+    * Cryptography functions are delegated to `GnuPG <http://www.gnupg.org/>`_ but you can write backend for your other favorite crypto tool/method
+    * Password generating is included for convenience and is configured as a shell command whose stdout is used
+* Flexibility
+    * you are free to identify resources to your passwords however you want as long as it fits into a graph with typed nodes.
+    * Database backend is sqlite but accessed via `sqlalchemy <http://www.sqlalchemy.org/>`_, so any RDBMS is easily possible.
+* `XDG <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_ support
 
 Usage
 =====
-To generate and store a new password for something interesting
+First things first
 ::
 
-    cpk new something interesting
+The format is basicaly::
 
-You say, you already have a password?
-just follow with a
+    $ cpk <command> <resource>
+    command = get | set | new | list`
+    resource = <node_matcher> [<node_matcher>]`
+    node_matcher = <attribute>=<node>`
+
+So your resource identificators are stored as nodes in a graph.
+Passwords are stored in the same graph always as a leaf node.
+
+Each node can be assigned an attribute type.
+In fact, nodes containing password, MUST be assigned password attribute.
+This is because of some sanity checking as it would be very impractical to
+treat password like a resource.
+
+CPK must know what attribute name specifies password. That's what config
+option `attributes.password` is for. So I'm gonna use name `p`
 ::
 
-    echo "password" | cpk set something interesting
+    [attributes]
+    password = p
 
-or use
+Now lets create the attribute in database
 ::
 
-    echo "password" | cpk new --stdin something interesting
+    cpk new -a p
 
-instead
+And we are ready to store stuff
 
-How about an url?
-It really doesnt matter, the resource_id can be arbitrary. However, for forward
-compatibility with a planned formfiller it is a good idea to have urls in a common
-"namespace" and keep in one format, like so
+Save a password for something interesting
 ::
 
-    cpk get url com domain username
+    echo "p4ssw0rd" | cpk new --stdin something interesting
 
-But I have multiple accounts there!
+If you are creating a new password and have configured a password_generator, you could use just
 ::
 
-    cpk get url com domain other_username
+    cpk new something interesting | xsel -b
 
-I also want to store information about how to retrieve the password just in case.
+
+Now you can get the password back with
 ::
 
-    cpk new -a retrieval_email
-    echo "trojita@blesmrt.net" | cpk new --stdin url com domain user retrieval_email=
-    cpk get url com domain user retrieval_email=
+    cpk get something interesting | xsel -b
+
+
+For URLs I chose to use
+::
+    cpk new -a u # for marking nodes as usernames
+    cpk get url com domain u=username
+
+As it makes sense to me and will make searching easier. But you are free to
+make up your own way.
+
+In case you don't remember the path you used, there is
+::
+
+    cpk list urls com example
+
+Which will print you list of children nodes and their attribute type.
+
+When you are specifying a `node_matcher` you don't have to use the full form.
+::
+    cpk list urls com example u=
+
+Which doesn't really make sense as user node would typically be always followed
+by password but it may be handy in other cases.
 
 Installation
 =============
@@ -77,10 +114,10 @@ default-recipient-self.
 
 Dependencies
 ============
-* py-gnupg ( http://py-gnupg.sourceforge.net/ )
-* sqlalchemy ( http://py-gnupg.sourceforge.net/ )
-* argparse ( http://pypi.python.org/pypi/argparse )
-* pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
+* `py-gnupg <http://py-gnupg.sourceforge.net/>`_
+* sqlalchemy
+* argparse
+* `pyxdg <http://www.freedesktop.org/wiki/Software/pyxdg>`_
 
 with tests
 -----------
@@ -91,7 +128,7 @@ with tests
 Tests
 ========
 * You need an environment with installed cpk itself as the acceptance tests operates on the installed executable
-* *The tests must be run on testing user* as it uses XDG as in normal operation
+* **The tests must be run on testing user** as it uses XDG as in normal operation
 * The user needs to have prepared ~/.gnupg directory. For noninteractivity with prepared key without passord and configured default-recipient-self
 
 You can prepare this by eg.
