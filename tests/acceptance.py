@@ -49,7 +49,8 @@ class TestClass(unittest.TestCase):
         f.close()
 
     def tearDown(self):
-        pass
+        if os.getenv("KEEP_XDG") is "1":
+            return
         os.unlink(expanduser("~/.config/cpk/config.ini"))
         os.unlink(expanduser("~/.local/share/cpk/wallet.asc"))
 
