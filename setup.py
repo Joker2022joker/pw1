@@ -28,8 +28,7 @@ setup(
     },
 
     package_data = {
-        #"example_configs": [ "*" ]
-        '': [ '*.ini' ]
+        "cpk": [ "data/*/*" ]
     },
 
     entry_points = {
