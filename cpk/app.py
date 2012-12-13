@@ -76,7 +76,7 @@ class App(object):
         self._argv = argv
         self.__init_logging()
         self._init_db()
-    
+
     _args = None
     @property
     def args(self):
@@ -88,12 +88,11 @@ class App(object):
 
     def __init_logging(self):
         log_cnf = load_first_config(self.xdg_resource,"logging.ini")
-        if log_cnf is None:
-            raise Exception("no logging.ini")
-            # FIXME handle this
 
-        from logging.config import fileConfig
-        fileConfig(log_cnf)
+        if log_cnf is not None:
+            from logging.config import fileConfig
+            fileConfig(log_cnf)
+
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("logging init")
 
     _cnf = None
@@ -126,9 +125,13 @@ class App(object):
         return db
 
     def _init_db(self):
-        from model import init_db
+        from cpk.model import init_db
         init_db(self._get_db(),self)
 
     def __call__(self):
         c = self.command()
         c()
+
+def main():
+    from sys import argv
+    App(argv)()

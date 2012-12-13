@@ -7,7 +7,8 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.schema import Table
 
-from logging import getLogger
+import logging
+log = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -53,8 +54,8 @@ class Node(Base):
         if attr.__class__ == Attribute:
             attr = attr.name
 
-        
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("%s %s"%(node,attr))
+
+        log.debug("%s %s"%(node,attr))
 
         if not node:
             filter = lambda x: x.attr.name == attr
@@ -82,7 +83,7 @@ class Node(Base):
         """
         if node.attribute:
             return node.attribute
-        
+
         return Attribute.default()
 
     @classmethod
@@ -100,7 +101,7 @@ class Node(Base):
 
             if matching_nodes:
                 if len(matching_nodes) > 1:
-                    from exc import MatchedMultiple
+                    from cpk.exc import MatchedMultiple
                     raise MatchedMultiple(matching_nodes,last_node)
 
                 last_node = matching_nodes[0]
@@ -109,8 +110,7 @@ class Node(Base):
                 if filter.has_key('node'):
                     new_node.value = filter['node']
 
-
-                getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(filter)
+                log.debug(filter)
                 if filter['attr']:
                     if not filter['attr'].__class__ is Attribute:
                         filter['attr'] = Attribute.get(filter['attr'])
@@ -123,25 +123,25 @@ class Node(Base):
             else:
                 raise NoNode(filter)
 
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(repr(last_node))
+        log.debug(repr(last_node))
         return last_node
 
 class Edge(Base):
     __tablename__ = 'edges'
 
-    lower_id = Column(Integer, 
-                        ForeignKey('nodes.id'), 
+    lower_id = Column(Integer,
+                        ForeignKey('nodes.id'),
                         primary_key=True)
 
-    higher_id = Column(Integer, 
-                        ForeignKey('nodes.id'), 
+    higher_id = Column(Integer,
+                        ForeignKey('nodes.id'),
                         primary_key=True)
 
     lower_node = relationship(Node,
-                                primaryjoin=lower_id==Node.id, 
+                                primaryjoin=lower_id==Node.id,
                                 backref='higher_edges')
     higher_node = relationship(Node,
-                                primaryjoin=higher_id==Node.id, 
+                                primaryjoin=higher_id==Node.id,
                                 backref='lower_edges')
 
     def __init__(self, higher, lower):
@@ -222,7 +222,7 @@ class NoNode(Exception):
 
 class NoPass(Exception):
     pass
-    
+
 class NoAttrValue(Exception):
     pass
 

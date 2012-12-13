@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
+from cpk.model import session, Node, Attribute, Edge
 
 class Command(IFace):
     def _run(self,args):
@@ -13,3 +14,8 @@ class Command(IFace):
 
             for i in self.conf.items(s):
                 print "\t\t%s = %s" % i
+
+        countable = [Node, Attribute, Edge]
+        for i in countable:
+            cnt = session.query(i).count()
+            print "%s count: %d" % (i.__name__, cnt)

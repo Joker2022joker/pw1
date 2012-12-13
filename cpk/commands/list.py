@@ -3,8 +3,8 @@
 
 from __future__ import print_function
 from . import Command as IFace
-from model import Attribute, session, Node
-import exc
+from cpk.model import Attribute, session, Node
+from cpk import exc
 
 class Command(IFace):
     def children(self):
@@ -20,7 +20,7 @@ class Command(IFace):
     def _run(self,args):
         if self.args.attribute:
              return [ print(i.name) for i in session.query(Attribute).all()]
-           
+
         rs = [ (i.attr.name, i.value) for i in self.children() ]
 
         if not rs:

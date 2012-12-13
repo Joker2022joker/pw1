@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace
-from model import Attribute, Node
+from cpk.model import Attribute, Node
 from sqlalchemy.orm.exc import NoResultFound
 
 class Command(IFace):

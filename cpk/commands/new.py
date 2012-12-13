@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from . import Command as IFace, ResourceExists
-from exc import MatchedMultiple
-from model import Node, session, Attribute
+from cpk.exc import MatchedMultiple
+from cpk.model import Node, session, Attribute
 
 from logging import getLogger
 
@@ -53,7 +53,7 @@ class Command(IFace):
         if attr and attr.generator:
             if self.args.stdin:
                 return self.input()
-            
+
             return self.generate_value()
         return self.input()
 
@@ -70,7 +70,7 @@ class Command(IFace):
         if new_type:
             filters.append({'attr': new_type})
 
-        
+
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("filters: %s" % filters)
         try:
             node = Node.get(filters,create=True)
