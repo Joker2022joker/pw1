@@ -1,10 +1,11 @@
+====
 CPK
 ====
 
 An Awesome Password Keeper
 
 Features
----------
+=========
 * CPK itself is just a simple python CLI user-interface for password storage, encryption and generation
 * Password encrypting with your favorite encryption method
 * Password generating with your favorite generator
@@ -12,11 +13,11 @@ Features
 
 
 Configuration
----------------
+===============
 TODO
 
 Usage
------
+=====
 To generate and store a new password for something interesting
 ::
 
@@ -55,9 +56,44 @@ I also want to store information about how to retrieve the password just in case
     echo "trojita@blesmrt.net" | cpk new --stdin url com domain user retrieval_email=
     cpk get url com domain user retrieval_email=
 
-DEPENDENCIES
-------------
+Installation
+=============
+::
+    git clone
+    cd cpk
+    python setup.py install
+    # copy config.ini to $XDG_CONFIG_HOME/cpk/ from example configs
+    # and set up your config
+
+what you need to configure
+-----------------------------
+* main.password_generator
+* attributes.password
+* the rest should be fine in default
+
+Note, that currently it is designed to work with gnupg with configured
+default-recipient-self
+
+
+Dependencies
+============
 * py-gnupg ( http://py-gnupg.sourceforge.net/ )
 * sqlalchemy ( http://py-gnupg.sourceforge.net/ ) developed on 0.6
 * argparse ( http://pypi.python.org/pypi/argparse )
 * pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
+
+Tests
+========
+* You need an environment with installed cpk itself as the acceptance tests operates on the installed executable
+* *The tests must be run on testing user* as it uses XDG as in normal operation
+* The user needs to have prepared ~/.gnupg directory. For noninteractivity with prepared key without passord and configured default-recipient-self
+
+You can prepare this by eg.
+::
+
+    virtualenv ~/.cpkenv
+    source ~/cpkenv/bin/activate
+    python setup.py install
+
+
+* Then just execute run_tests.sh # $PWD agnostic
