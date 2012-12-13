@@ -3,9 +3,10 @@
 
 import unittest
 import sys
-import re
+import re, logging, os
+log = logging.getLogger(__name__)
 
-from os.path import dirname,abspath,join
+from os.path import dirname,abspath,join,expanduser
 sys.path.insert(0,abspath(dirname(dirname(__file__))))
 
 from cpk.app import App,ConfParser
@@ -17,25 +18,40 @@ class ShouldbeEmpty(Exception):
 class TestClass(unittest.TestCase):
     @staticmethod
     def cpk():
-        return join(abspath(dirname(dirname(__file__))),"cpk.py")
+        return join(abspath(dirname(dirname(__file__))),"cpk")
 
     def assertEmpty(self,v):
-        if not v == "":
-            print v
-            raise ShouldbeEmpty(v)
+        self.assertEquals(v, "")
 
     @classmethod
     def s_app(self,cmd):
         if type(cmd) is str:
             cmd = cmd.split(" ")
 
-        cmd.insert(0,self.cpk())
-
+        cmd.insert(0,"cpk")
+        log.debug(cmd)
         p = Popen(cmd,0,stdin=PIPE,stderr=PIPE,stdout=PIPE)
         return p
 
     def app(self,cmd):
         return TestClass.s_app(cmd)
+
+    def setUp(self):
+        base_path = expanduser("~/.config/cpk")
+        if not os.path.isdir(base_path):
+            os.makedirs(base_path)
+        f = open(join(base_path, "config.ini"),"w")
+        f.write("[main]\n"
+            "password_generator = apg -n 1 -m 5 -x 5\n"
+            "[attributes]\n"
+            "password = p\n"
+        )
+        f.close()
+
+    def tearDown(self):
+        pass
+        os.unlink(expanduser("~/.config/cpk/config.ini"))
+        os.unlink(expanduser("~/.local/share/cpk/wallet.asc"))
 
     def test_me(self):
         ms = range(0,6)
@@ -73,16 +89,11 @@ class TestClass(unittest.TestCase):
         p.wait()
 
         o=p.stdout.read()
-        e = p.stderr.read()
-
-        m = re.match(r'^.{3}$',o)
-        if m is None:
-            print o
-            print e
-            raise Exception(o)
-
+        m = re.match(r'^.{5}$',o)
+        self.assertTrue(m)
         expect = o
 
+        e = p.stderr.read()
         self.assertEmpty(e)
 
         p = self.app("get ble smrt")
@@ -90,9 +101,7 @@ class TestClass(unittest.TestCase):
         o = p.stdout.read()
         e = p.stderr.read()
 
-        if not expect == o:
-            raise Exception("getted value doesnt correspond to newed value")
-
+        self.assertEqual(expect, o)
         self.assertEmpty(e)
 
     def part_3(self):
@@ -156,17 +165,6 @@ class TestClass(unittest.TestCase):
         e = p.stderr.read()
         self.assertEmpty(e)
         assert(o==attr)
-
-    @classmethod
-    def tearDownClass(self):
-        import os
-        p = self.s_app("info")
-        o = p.stdout.read().split("\n")
-        m = re.match(r'^db:\t(.+)$',o[0])
-        db = m.groups()[0]
-        check = '/tmp/cpk/'
-        if len(db) > len(check) and db[0:len(check)] == check:
-            os.remove(db)
 
 if __name__ == '__main__':
     unittest.main()
