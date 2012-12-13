@@ -7,7 +7,8 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.schema import Table
 
-from logging import getLogger
+import logging
+log = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -54,7 +55,7 @@ class Node(Base):
             attr = attr.name
 
 
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug("%s %s"%(node,attr))
+        log.debug("%s %s"%(node,attr))
 
         if not node:
             filter = lambda x: x.attr.name == attr
@@ -109,8 +110,7 @@ class Node(Base):
                 if filter.has_key('node'):
                     new_node.value = filter['node']
 
-
-                getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(filter)
+                log.debug(filter)
                 if filter['attr']:
                     if not filter['attr'].__class__ is Attribute:
                         filter['attr'] = Attribute.get(filter['attr'])
@@ -123,7 +123,7 @@ class Node(Base):
             else:
                 raise NoNode(filter)
 
-        getLogger("%s_%s" % (__name__, self.__class__.__name__,)).debug(repr(last_node))
+        log.debug(repr(last_node))
         return last_node
 
 class Edge(Base):
