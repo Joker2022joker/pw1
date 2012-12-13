@@ -41,7 +41,7 @@ class PyGnupg:
 
         return enc
 
-    def decrypt(enc):
+    def decrypt(self, enc):
         gpg = self._gpg
         gpg_p = gpg.run(['-d','--no-tty'],create_fhs=['stdin','stdout','stderr'])
         gpg_p.handles['stdin'].write(enc)
