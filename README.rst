@@ -11,11 +11,6 @@ Features
 * Password generating with your favorite generator
 * That's right, it doesn't care about shit. Just configure your backends
 
-
-Configuration
-===============
-TODO
-
 Usage
 =====
 To generate and store a new password for something interesting
@@ -58,29 +53,40 @@ I also want to store information about how to retrieve the password just in case
 
 Installation
 =============
+
 ::
+
     git clone
     cd cpk
     python setup.py install
     # copy config.ini to $XDG_CONFIG_HOME/cpk/ from example configs
     # and set up your config
 
-what you need to configure
------------------------------
+Configuration
+=============================
+What you need to set up yourself is
+
 * main.password_generator
 * attributes.password
-* the rest should be fine in default
+
+the rest should be fine in default
 
 Note, that currently it is designed to work with gnupg with configured
-default-recipient-self
+default-recipient-self.
 
 
 Dependencies
 ============
 * py-gnupg ( http://py-gnupg.sourceforge.net/ )
-* sqlalchemy ( http://py-gnupg.sourceforge.net/ ) developed on 0.6
+* sqlalchemy ( http://py-gnupg.sourceforge.net/ )
 * argparse ( http://pypi.python.org/pypi/argparse )
 * pyxdg ( http://www.freedesktop.org/wiki/Software/pyxdg )
+
+with tests
+-----------
+* apg
+* nosetests
+* subprocess
 
 Tests
 ========
