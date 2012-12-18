@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from ConfigParser import SafeConfigParser as ConfigParser
-from os.path import expanduser
+from os.path import expanduser, dirname
 from logging import getLogger
 from xdg.BaseDirectory import load_first_config
 
@@ -101,7 +101,11 @@ class App(object):
         if self._cnf is None:
             cnf = load_first_config("cpk","config.ini")
             if cnf is None:
-                raise Exception("no config.ini")
+                import cpk, sys
+                msg = "missing config.ini in $XDG_CONFIG_HOME\nyou " \
+                    "can find example files in %s/data/configs" % dirname(cpk.__file__)
+                print >> sys.stderr, msg
+                exit(1)
 
             self._cnf = self.conf_parser(cnf)
         return self._cnf
