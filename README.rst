@@ -54,6 +54,11 @@ Save a password for something interesting
 
     echo "p4ssw0rd" | cpk new --stdin something interesting
 
+Use read to prevent the password being written to history file
+::
+
+    read i; echo $i | cpk new --stdin foo
+
 If you are creating a new password and have configured a password_generator, you could use just
 ::
 
