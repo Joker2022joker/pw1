@@ -97,8 +97,10 @@ by password but it may be handy in other cases.
 
 Caveat Emptor
 =============
-Currently only the passwords are encrypted.
-∴ resource paths are unencrypted
+*   Currently only the passwords are encrypted.
+    ∴ resource paths are unencrypted
+
+*   The CLI is experimental yet and may change behaviour with each release
 
 Installation
 =============
