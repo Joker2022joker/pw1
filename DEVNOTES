@@ -83,6 +83,8 @@ Commands can be separated to those which
 
 TODO
 ====
+*	FUSE fs
+
 	storage
 		using XML file(s) could be natural as
 			* this way, we get full encryption
