@@ -20,6 +20,8 @@ Usage
 First things first
 ::
 
+The main idea is that you don't store passwords to websites or whatnot but generically resources, be it website, mail account or your safe in the wall behind a painting.
+
 The format is basicaly::
 
     $ cpk <command> <resource>
@@ -92,6 +94,11 @@ When you are specifying a `node_matcher` you don't have to use the full form.
 
 Which doesn't really make sense as user node would typically be always followed
 by password but it may be handy in other cases.
+
+Caveat Emptor
+=============
+Currently only the passwords are encrypted.
+∴ resource paths are unencrypted
 
 Installation
 =============
