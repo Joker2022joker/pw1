@@ -98,7 +98,7 @@ class App(object):
     @property
     def conf(self):
         if self._cnf is None:
-            cnf = load_first_config("cpk","config.ini")
+            cnf = load_first_config(self.xdg_resource,"config.ini")
             if cnf is None:
                 import cpk, sys
                 msg = "missing config.ini in $XDG_CONFIG_HOME\nyou " \

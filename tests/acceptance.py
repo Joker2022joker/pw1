@@ -6,6 +6,8 @@ import sys
 import re, logging, os
 log = logging.getLogger(__name__)
 
+from xdg.BaseDirectory import xdg_config_home, xdg_data_home
+
 from os.path import dirname,abspath,join,expanduser
 sys.path.insert(0,abspath(dirname(dirname(__file__))))
 
@@ -16,6 +18,9 @@ class ShouldbeEmpty(Exception):
     pass
 
 class TestClass(unittest.TestCase):
+    xdg_cnf = join(xdg_config_home, "cpk")
+    xdg_data = join(xdg_data_home, "cpk")
+
     @staticmethod
     def cpk():
         return join(abspath(dirname(dirname(__file__))),"cpk")
@@ -37,10 +42,9 @@ class TestClass(unittest.TestCase):
         return TestClass.s_app(cmd)
 
     def setUp(self):
-        base_path = expanduser("~/.config/cpk")
-        if not os.path.isdir(base_path):
-            os.makedirs(base_path)
-        f = open(join(base_path, "config.ini"),"w")
+        if not os.path.isdir(self.xdg_cnf):
+            os.makedirs(self.xdg_cnf)
+        f = open(join(self.xdg_cnf, "config.ini"),"w")
         f.write("[main]\n"
             "password_generator = apg -n 1 -m 5 -x 5\n"
             "[attributes]\n"
@@ -51,8 +55,8 @@ class TestClass(unittest.TestCase):
     def tearDown(self):
         if os.getenv("KEEP_XDG") is "1":
             return
-        os.unlink(expanduser("~/.config/cpk/config.ini"))
-        os.unlink(expanduser("~/.local/share/cpk/wallet.asc"))
+        os.unlink(join(self.xdg_cnf, "config.ini"))
+        os.unlink(join(self.xdg_data, "wallet.asc"))
 
     def test_me(self):
         ms = range(0,6)
