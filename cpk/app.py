@@ -61,6 +61,9 @@ def arg_parser(**kwargs):
 
     ps['mv'] = subp.add_parser('mv',help='Move nodes onto --to nodes')
 
+    ps['search'] = subp.add_parser('search')
+    ps['search'].add_argument("node_value", type=str)
+
     [add_gp(ps[i]) for i in ["get","set","new","rm",'mv']]
 
     ps['mv'].add_argument('-t','--to',nargs='+',type=str)

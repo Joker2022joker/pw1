@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.schema import Table
+from sqlalchemy.orm.query import Query
 
 import logging
 log = logging.getLogger(__name__)
@@ -14,12 +15,23 @@ Base = declarative_base()
 
 session = app = None
 
+class NodeQuery(Query):
+    def get_nodes_by_value(self, val):
+        return self.filter_by(value=val)
+
+
+
 class Node(Base):
     __tablename__ = 'nodes'
 
     id = Column(Integer, primary_key=True)
     attribute_id = Column(Integer,ForeignKey('attributes.id'))
     value = Column(String(256),nullable=False)
+
+    @classmethod
+    def query(cls):
+        return NodeQuery([cls], session.query(cls).session)
+        # ^ FIXME: ugly
 
     def __repr__(self):
         return "<%s_%s_%s_%s>" % (self.__class__.__name__, self.id, self.attribute_id, self.value)
@@ -125,6 +137,18 @@ class Node(Base):
 
         log.debug(repr(last_node))
         return last_node
+
+    def get_paths(self):
+        ancestors = self.higher()
+        out = []
+        for ancestor in ancestors:
+            if ancestor is self.root():
+                out.append([self])
+            else:
+                for path in ancestor.get_paths():
+                    out.append(path + [self])
+        return out
+
 
 class Edge(Base):
     __tablename__ = 'edges'
