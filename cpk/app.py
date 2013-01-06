@@ -12,7 +12,6 @@ class ConfParser(ConfigParser):
         'debug': {
             'encrypt':'on'},
         'main': {
-            'password_generator': 'apg',
             'db':'wallet.asc',
             'input_kill_0x0a': "on",
             'output_kill_0x0a': "on"}}
