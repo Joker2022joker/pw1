@@ -100,7 +100,7 @@ Caveat Emptor
 *   Currently only the passwords are encrypted.
     ∴ resource paths are unencrypted
 
-*   The CLI is experimental yet and may change behaviour with each release
+*   The CLI is experimental yet and may change behaviour with each minor release
 
 Installation
 =============
@@ -112,6 +112,10 @@ Installation
     python setup.py install
     # copy config.ini to $XDG_CONFIG_HOME/cpk/ from example configs
     # and set up your config
+
+Contact
+========
+Talk to me at IRC #cpk@freenode. Especialy if you use this software, I'd love to hear *how* you use it. I'm planning major redesign.
 
 Configuration
 =============================
