@@ -7,6 +7,7 @@ fundamental data
 = Service(type, name), Account, Password
 
 imaginable services:
+
 *   mailing lists
 *   svn (user, pass)
 *   openid (user, provider) # TODO: research how hostname is applicable
@@ -16,6 +17,7 @@ imaginable services:
 *   ircbot (bot, network) - chanservs, other bots (eg. #idlerpg),
 *   mysql
 *   www - per network (private internets may use colliding tld (typicaly .int, .local, but others also easily possible))
+
 *   offline account access, like telephone companies
 
 data model
