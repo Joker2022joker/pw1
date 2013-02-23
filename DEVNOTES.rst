@@ -1,3 +1,59 @@
+===========
+CPK 0.0.2
+===========
+
+data model
+===========
+Graph is wrong structure. What we probably really need is document-like database so we can store list of Records.
+Record is an entity with following attributes::
+
+    host
+    user
+    ${cg.pwd_t}
+    ${cg.extra_t}
+    service
+    unique(host, user, service)
+
+*   service means service type, that is eg. www, smtp, imap, etc.
+
+*   ${cg.pwd_t} expands to multiple attribute=value pairs where each value is password-level sensitive information and is required for extensibility as some services offer to set multiple authenticaion tokens (aka. passwords, pins, phrases) and some even require using multiple of them to do major changes on the account.
+
+*   ${cg.extra_t} expands to multiple attribute=value pairs which serve for additional service/account identification, which is also sensitive but not as much as password. This is required for extensibility - candidate extra attributes: associated email, organization, provider.
+
+*   I believe the unique constraint is generic enough, because hostname, username and service type are the fundamental data to identify an account on a service.
+
+benefits
+=========
+1.  This will allow us, to select Records, just by eg. `host=example.com`. Or `host=example.com service=www` in case host=example.com doesn't resolve to one and only one Record.
+
+2.  The Record search algorithm will be simplified to simple reduce.
+
+3.  Way simpler model to understand and get data from.
+
+4.  We get to encrypt everything with no performance hit.
+
+TODO
+=====
+1.  *   Some users may use it for just one service so they don't need this field.
+
+    *   Host will be handy only with formfiller, while without one, one might wanna use just wanna use arbitrary unique name
+
+    *   Some services might not require username, that's horribly wrong but so are passwords and this very uncommon but including this will make better consistency.
+
+    *   By which I mean, Record could be just { ${cg.pwd_t}, ${cg.id_t} }
+
+2.  Will need to implement ambigiuty
+
+3.  mapping from 0.0.1 to 0.0.2 will not be automaticaly migratable. It will require manual migration or multiple migrations for each subset of the data in 0.0.1
+
+4.  Requires ambiguity checker. As some fields may be ommited from the getter query, it can not be allowed to set a value for attribute of a record that would resolve to multiple records if this attribute is not included in the query.
+
+6.  Interface for getting the ${cg.pwd_t} value and also choosing which one of those.
+
+==========
+CPK 0.0.1
+==========
+
 Roadmap
 ========
 Interfaces
