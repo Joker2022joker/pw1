@@ -2,6 +2,22 @@
 CPK 0.0.2
 ===========
 
+fundamental data
+================
+= Service(type, name), Account, Password
+
+imaginable services:
+*   mailing lists
+*   svn (user, pass)
+*   openid (user, provider) # TODO: research how hostname is applicable
+*   jabber
+*   ssh keys
+*   gpg keys
+*   ircbot (bot, network) - chanservs, other bots (eg. #idlerpg),
+*   mysql
+*   www - per network (private internets may use colliding tld (typicaly .int, .local, but others also easily possible))
+*   offline account access, like telephone companies
+
 data model
 ===========
 Graph is wrong structure. What we probably really need is document-like database so we can store list of Records.
