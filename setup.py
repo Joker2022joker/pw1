@@ -18,8 +18,8 @@ setup(
 
     install_requires = [
         "setuptools",
-        "sqlalchemy",
-        "argparse",
+        "argparse", # see cement issue 187
+        "cement",
         "pyxdg",
     ],
 
