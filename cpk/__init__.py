@@ -1,7 +1,4 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.0.1"
-
-class ContradictingArgs(Exception):
-    pass
+__version__ = "0.2.0_dev1"
