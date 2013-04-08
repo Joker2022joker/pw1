@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from logging import getLogger
+import re
+from cement.core.controller import CementBaseController
+from inspect import isclass
 
 class PythonGnupg:
     """Cryptography adapter for gnupg using python-gnupg project"""
@@ -66,7 +69,6 @@ def tokenize_nodes(nodes):
     """
         tokenize list of nodes in format attribute=value into list of (attribute,value).
     """
-    import re
     from cpk.model import Attribute, session
     attrs = [i.name for i in session.query(Attribute).all()]
 
@@ -80,4 +82,10 @@ def tokenize_nodes(nodes):
 
     getLogger("%s" % (__name__,)).debug("tokens: %s" % tokens)
     return tokens
+
+def ctrls(xs):
+    return [x for x in xs if
+        isclass(x) and
+        x is not CementBaseController and
+        issubclass(x, CementBaseController)]
 

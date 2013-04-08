@@ -3,7 +3,9 @@
 
 from xdg.BaseDirectory import load_first_config
 from cement.core import foundation, handler, hook, controller
-import .controller as ctrl
+
+from . import controller as ctrl
+from .utils import ctrls
 
 class Application(foundation.CementApp):
     class Meta:
@@ -20,8 +22,8 @@ class Application(foundation.CementApp):
 def main():
     app = Application()
 
-    [handler.register(c) for c in dir(ctrl)
-        if isinstance(c, controller.CementBaseController)]
+    for c in ctrls([getattr(ctrl, x) for x in dir(ctrl)]):
+        handler.register(c)
 
     app.setup()
     app.run()
