@@ -60,13 +60,11 @@ TODO
 
     *   By which I mean, Record could be just { ${cg.pwd_t}, ${cg.id_t} }
 
-2.  Will need to implement ambigiuty
+2.  Requires ambiguity checker. As some fields may be ommited from the getter query, it can not be allowed to set a value for attribute of a record that would resolve to multiple records if this attribute is not included in the query.
 
 3.  mapping from 0.0.1 to 0.0.2 will not be automaticaly migratable. It will require manual migration or multiple migrations for each subset of the data in 0.0.1
 
-4.  Requires ambiguity checker. As some fields may be ommited from the getter query, it can not be allowed to set a value for attribute of a record that would resolve to multiple records if this attribute is not included in the query.
-
-6.  Interface for getting the ${cg.pwd_t} value and also choosing which one of those.
+4.  Interface for getting the ${cg.pwd_t} value and also choosing which one of those.
 
 ==========
 CPK 0.0.1
