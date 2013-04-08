@@ -17,6 +17,16 @@ class CPKController(CementBaseController):
         self._dispatch()
 
 class NewController(CementBaseController):
-    @expose
+    class Meta:
+        interface = IController
+        label = "new"
+        description = "create new Record or Service"
+        arguments = [
+            (['-s', '--service'], dict(type=str, help='service')),
+            (['args'], dict(metavar='spec', type=str, nargs='+', help='TODO')),
+        ]
+        aliases = ['n']
+
+    @expose()
     def default(self):
-        pass
+        print(self.pargs)
