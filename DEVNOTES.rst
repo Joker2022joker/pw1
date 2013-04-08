@@ -66,6 +66,8 @@ TODO
 
 4.  Interface for getting the ${cg.pwd_t} value and also choosing which one of those.
 
+5.  metadata keeping will be a little challenge. I suppose the best way is to keep an Action Log in file separate from the wallet which will contain every action taken with the cpk in line oriented format, possibly identified by uuid 1 or 5. This Action Log should allow to get *any* kind of stats that are possible in completely generic way for writing the data. However, I imagine the Action Log will be growing in size a lot.
+
 ==========
 CPK 0.0.1
 ==========
