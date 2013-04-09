@@ -24,7 +24,7 @@ setup(
     ],
 
     extras_require = {
-        'python_gnupg': ["python-gnupg"],
+        'gpg': ["GnuPGInterface"],
     },
 
     package_data = {
