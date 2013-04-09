@@ -26,6 +26,9 @@ setup(
     extras_require = {
         'gpg': ["GnuPGInterface"],
     },
+    # TODO: figure out how to install GnuPGInterface on travis-ci. It can't be
+    # installed by pip and `apt-get install python-gnupginterface` installs 0
+    # packages
 
     package_data = {
         "cpk": [ "data/*/*" ]

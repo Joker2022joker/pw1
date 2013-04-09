@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from .xdg import save_data_path
+
 class Service(object):
     def __init__(self, name, id_as, password_as):
         """
@@ -30,8 +32,9 @@ class Wallet(object):
                 wallet file
         :
         """
-        # full = pyxdg(name)
-        # crypto_adapter.open(full)
+
+        wallet_file = save_data_path(name)
+        crypto_adapter.open(wallet_file)
         w = Wallet(crypto_adapter)
         # w.load()
         return w

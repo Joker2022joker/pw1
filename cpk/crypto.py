@@ -6,7 +6,7 @@ class Interface(object):
     :ivar wallet: file
         open wallet file
     """
-    def __init__(self, config):
+    def __init__(self, config=None):
         """
         :Parameters:
             config : list of (name, value)
@@ -33,7 +33,14 @@ class Interface(object):
             path : str
                 absolute path to the wallet file
         """
-        self.wallet = open(path)
+        #self.wallet = open(path)
+
+class Dummy(Interface):
+    def _encrypt(self, payload):
+        return payload
+
+    def _decrypt(self, payload):
+        return payload
 
 try:
     import GnuPGInterface as GPGI
