@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 
 class Interface(object):
-    """
-    :ivar wallet: file
-        open wallet file
-    """
     def __init__(self, config=None):
         """
         :Parameters:
@@ -26,14 +22,8 @@ class Interface(object):
         :Parameters:
             payload : str
         """
+        raise NotImplementedError
 
-    def open(self, path):
-        """
-        :Parameters:
-            path : str
-                absolute path to the wallet file
-        """
-        #self.wallet = open(path)
 
 class Dummy(Interface):
     def _encrypt(self, payload):

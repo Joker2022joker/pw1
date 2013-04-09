@@ -21,6 +21,7 @@ setup(
         "argparse", # see cement issue 187
         "cement",
         "pyxdg",
+        "twisted",
     ],
 
     extras_require = {

@@ -18,4 +18,3 @@ def ctrls(xs):
         isclass(x) and
         x is not CementBaseController and
         issubclass(x, CementBaseController)]
-
