@@ -15,5 +15,5 @@ script: make test_all
 notifications:
   irc:
     channels:
-      - "irc.freenode.org#cpk"
+      - "irc.freenode.net#cpk"
     skip_join: true
