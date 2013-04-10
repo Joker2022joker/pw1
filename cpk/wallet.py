@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from copy import deepcopy
 
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.error import ConnectionDone
@@ -12,7 +13,7 @@ from .xdg import save_data_path
 from .utils import Serializable
 
 class Service(Serializable):
-    def __init__(self, name, id_as, password_as):
+    def __init__(self, name, id_as=[], password_as=[]):
         """
         :Parameters:
             name : str
@@ -22,8 +23,68 @@ class Service(Serializable):
             password_as : list of str
                 password attribute names for this service
         """
+        for i in password_as:
+            if i in id_as:
+                raise ValueError("{0} attribute found in both password and"
+                    " identification attributes".format(i))
+
         self.name, self.id_as, self.password_as = name, id_as, password_as
 
+    def __contains__(self, key):
+        return key in self.id_as or key in self.password_as
+
+    def __eq__(self, other):
+        return self.name == other.name \
+            and self.id_as == other.id_as \
+            and self.password_as == other.password_as
+
+class Record(Serializable):
+    """
+    :ivar service: `Service`
+    :ivar attrs: dict
+        str -> str
+    """
+    def __init__(self, service, **attributes):
+        """
+        :Parameters:
+            service : `Service`
+        """
+        if not isinstance(service, Service):
+            raise TypeError("Expected {0} got {1}".
+                format(Service, service.__class__))
+
+        self.service = service
+        self.attrs = {}
+        for name,value in attributes.items():
+            self.add_attribute(name, value)
+
+    def add_attribute(self, name, value):
+        """
+        :Parameters:
+            name : str
+            value : str
+        """
+        if not name in self.service:
+            raise ValueError("Attribute {0} not in {1}".
+                format(name, self.service))
+
+        self.attrs[name] = value
+
+    def to_dict(self):
+        d = deepcopy(self.__dict__)
+        d['service'] = self.service.name
+        # FIXME: the service shenanigans feel wrong.
+        # The Record can be serialized just by itself, but to be deserialized
+        # it need's extra work as in WalletProtocol.recordReceived
+        return d
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(d['service'], **d['attrs'])
+
+    def __eq__(self, other):
+        return self.service == other.service \
+            and self.attrs == other.attrs
 
 class WalletProtocol(LineReceiver):
     """
@@ -75,16 +136,28 @@ class WalletProtocol(LineReceiver):
                 self.serviceReceived(s)
 
     def serviceReceived(self, s):
+        """
+        :Parameters:
+            s : dict
+        """
         s = Service.from_dict(s)
         self.wallet.add_service(s)
 
-    def recordReceived(self, line):
-        pass
+    def recordReceived(self, r):
+        """
+        :Parameters:
+            s : dict
+        """
+        r['service'] = self.wallet.get_service(r['service_name'])
+        del r['service_name']
+        r = Record.from_dict(r)
+        self.wallet.add_record(r)
 
 class Wallet(object):
     """
     :ivar adapter: `crypto.Interface`
     :ivar services: dict of `Service.name` -> `Service`
+    :ivar records: list of `Record`
     """
     def __init__(self, adapter):
         """
@@ -93,6 +166,7 @@ class Wallet(object):
         """
         self.adapter = adapter
         self.services = {}
+        self.records = []
 
     def _open(self, file_):
         """
@@ -137,3 +211,14 @@ class Wallet(object):
             raise RuntimeError("Duplicit service {0}".format(service.name))
 
         self.services[service.name] = service
+
+    def get_service(self, service):
+        """
+        :Parameters:
+            service : str
+                `Service.name`
+        """
+        return self.services[service]
+
+    def add_record(self, record):
+        pass

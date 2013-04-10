@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from cpk.wallet import WalletProtocol, Service, Wallet
+from cpk.wallet import WalletProtocol, Service, Wallet, Record
 from nose.tools import eq_, raises, ok_
 from unittest import TestCase
 from cpk.crypto import Dummy
@@ -12,6 +12,51 @@ class CallCheck(object):
     def __call__(self, *args, **kw):
         self.cnt += 1
 
+# {{{ Service
+def test_service_contains():
+    s = Service('www', ['host', 'user'],['pwd'])
+    ok_('host' in s)
+    ok_('pwd' in s)
+    ok_('foo' not in s)
+
+@raises(ValueError)
+def test_service_attribute_uniqueness():
+    Service('www', ['host'], ['host'])
+
+class TestServiceOperators(TestCase):
+    def setUp(self):
+        self.x = Service('w', ['a'], ['b'])
+        self.y = Service('w', ['a'], ['b'])
+
+    def test_equals(self):
+        eq_(self.x, self.y)
+
+    def test_identity(self):
+        ok_(not self.x is self.y)
+# }}}
+
+# {{{ Record
+def test_record_type_check():
+    Record(Service('www'))
+
+@raises(TypeError)
+def test_record_type_check2():
+    Record('foo')
+
+def test_record_add_attribute():
+    s = Service('www', ['host', 'user'],['pwd'])
+    r = Record(s)
+    r.add_attribute('host', 'bar')
+    eq_(r.attrs['host'], 'bar')
+
+@raises(ValueError)
+def test_record_attribute_check():
+    s = Service('www', ['host', 'user'],['pwd'])
+    r = Record(s)
+    r.add_attribute('foo', 'bar')
+# }}}
+
+# {{{ WalletProtocol 
 def test_wallet_protocol_line_parser():
     p = WalletProtocol(None, None)
 
@@ -75,26 +120,50 @@ def test_wallet_protocol_nonempty_buffer_on_connectionLost():
     p.dataReceived(b"foo\n")
     p.connectionLost()
 
-# {{{ serialization
+# }}}
 
-class TestService(TestCase):
+# {{{ serialization
+class SerializationTester(object):
+    # NOTE: these to/from methods are probably redundant with full_circle test
+    def test_to(self):
+        eq_(self.obj.to_dict(), self.dict)
+
+    def test_from(self):
+        s = self.cls.from_dict(self.dict)
+        eq_(s, self.obj)
+
+class FullCircleSerializationTester(SerializationTester):
+    def test_full_circle(self):
+        s = self.cls.from_dict(self.obj.to_dict())
+        eq_(s, self.obj)
+
+class TestService(TestCase, FullCircleSerializationTester):
     def setUp(self):
         self.dict = {
             'name':'www',
             'id_as': ['host', 'user'],
             'password_as': ['pwd']}
-        self.service = Service('www', ['host', 'user'],['pwd'])
+        self.cls = Service
+        self.obj = Service('www', ['host', 'user'],['pwd'])
 
-    def test_to(self): 
-        eq_(self.service.to_dict(), self.dict)
+class TestRecord(TestCase, SerializationTester):
+    def setUp(self):
+        self.dict = {
+            'service': 'www',
+            'attrs': {'host':'x', 'pwd': 'y'}}
+        self.cls = Record
+        self.service = Service('www', ['host'], ['pwd'])
+        self.obj = Record(self.service,
+            host='x', pwd='y')
 
     def test_from(self):
-        s = Service.from_dict(self.dict)
-        eq_(s.__dict__, self.dict)
-
+        # FIXME
+        self.dict['service'] = self.service
+        s = self.cls.from_dict(self.dict)
+        eq_(s, self.obj)
 # }}}
 
-
+# {{{ Wallet
 def test_wallet_add_service():
     w = Wallet(Dummy)
     s = Service('www', ['host', 'user'],['pwd'])
@@ -110,3 +179,4 @@ def test_wallet_doesnt_accept_duplicit_services():
     s = Service('www', ['host', 'user'],['pwd'])
     w.add_service(s)
     w.add_service(s)
+# }}}
