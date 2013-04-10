@@ -10,14 +10,14 @@ class Interface(object):
         """
         self.config = config
 
-    def _encrypt(self, payload):
+    def encrypt(self, payload):
         """
         :Parameters:
             payload : str
         """
         raise NotImplementedError
 
-    def _decrypt(self, payload):
+    def decrypt(self, payload):
         """
         :Parameters:
             payload : str
@@ -26,10 +26,10 @@ class Interface(object):
 
 
 class Dummy(Interface):
-    def _encrypt(self, payload):
+    def encrypt(self, payload):
         return payload
 
-    def _decrypt(self, payload):
+    def decrypt(self, payload):
         return payload
 
 try:
@@ -58,8 +58,8 @@ else:
             gpg_p.wait()
             return out
 
-        def _encrypt(self, payload):
+        def encrypt(self, payload):
             return self._gpg_run(['-e','--armor'], ['stdin','stdout'])
 
-        def _decrypt(self, payload):
+        def decrypt(self, payload):
             return self._gpg_run(['-d','--no-tty'], ['stdin','stdout',])
