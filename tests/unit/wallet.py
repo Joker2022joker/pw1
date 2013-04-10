@@ -179,4 +179,12 @@ def test_wallet_doesnt_accept_duplicit_services():
     s = Service('www', ['host', 'user'],['pwd'])
     w.add_service(s)
     w.add_service(s)
+
+def test_wallet_add_record():
+    w = Wallet(Dummy())
+    s = Service('www')
+    r = Record(s)
+    eq_(len(w.records), 0)
+    w.add_record(r)
+    eq_(len(w.records), 1)
 # }}}

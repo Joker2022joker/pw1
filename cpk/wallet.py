@@ -14,6 +14,10 @@ from .utils import Serializable
 
 class Service(Serializable):
     def __init__(self, name, id_as=[], password_as=[]):
+        # FIXME: id_as makes sense to be [] but password_as must be non-empty
+        # list
+        # ∴ FIXME: the order should also be reversed: 1st passwords, then
+        # identificators
         """
         :Parameters:
             name : str
@@ -76,6 +80,7 @@ class Record(Serializable):
         # FIXME: the service shenanigans feel wrong.
         # The Record can be serialized just by itself, but to be deserialized
         # it need's extra work as in WalletProtocol.recordReceived
+        # also tests.wallet.TestRecord
         return d
 
     @classmethod
@@ -221,4 +226,4 @@ class Wallet(object):
         return self.services[service]
 
     def add_record(self, record):
-        pass
+        self.records.append(record)
