@@ -11,3 +11,9 @@ install:
     - pip install -q Twisted==$TWISTED_V
     - python setup.py install
 script: sh run_tests.sh
+
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#cpk"
+    skip_join: true
