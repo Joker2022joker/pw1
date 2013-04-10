@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
+
+from twisted.protocols.basic import LineReceiver
+from twisted.internet.error import ConnectionDone
+
+import json
+
 from .xdg import save_data_path
 from .utils import Serializable
 
@@ -19,17 +25,18 @@ class Service(Serializable):
         self.name, self.id_as, self.password_as = name, id_as, password_as
 
 
-from twisted.protocols.basic import LineReceiver
-from twisted.internet.error import ConnectionDone
-
 class WalletProtocol(LineReceiver):
     """
     :ivar wallet: `cpk.wallet.Wallet`
+    :ivar adapter: `cpk.crypto.Interface`
+    :ivar header:
     """
     delimiter = b'\n\n'
 
-    def __init__(self, wallet):
+    def __init__(self, wallet, adapter):
         self.wallet = wallet
+        self.adapter = adapter
+        self.read_header = True
 
     def _get_buffer(self):
         if hasattr(self, '_buffer'):
@@ -47,9 +54,37 @@ class WalletProtocol(LineReceiver):
     # so I'm just gonna require all lines MUST be ended with the delimiter for
     # now
 
+    def lineReceived(self, line):
+        line = line.decode('utf-8')
+        line = self.adapter.decrypt(line)
+        line = json.loads(line)
+        if self.read_header:
+            self.headerReceived(line)
+            self.read_header = False
+            return
+
+        self.recordReceived(line)
+
+    def headerReceived(self, header):
+        """
+        :Parameters:
+            header : dict
+        """
+        if 'services' in header:
+            for s in header['services']:
+                self.serviceReceived(s)
+
+    def serviceReceived(self, s):
+        s = Service.from_dict(s)
+        self.wallet.add_service(s)
+
+    def recordReceived(self, line):
+        pass
+
 class Wallet(object):
     """
     :ivar adapter: `crypto.Interface`
+    :ivar services: dict of `Service.name` -> `Service`
     """
     def __init__(self, adapter):
         """
@@ -57,6 +92,7 @@ class Wallet(object):
             adapter : `crypto.Interface`
         """
         self.adapter = adapter
+        self.services = {}
 
     def _open(self, file_):
         """
@@ -71,10 +107,9 @@ class Wallet(object):
             raise RuntimeError('wallet file is not a file {0}'.format(file_))
 
         wfile = open(file_, 'rb')
-        p = WalletProtocol(self)
+        p = WalletProtocol(self, self.adapter)
         p.dataReceived(wfile.read())
         p.connectionLost()
-
 
     @staticmethod
     def open(name, crypto_adapter):
@@ -92,3 +127,13 @@ class Wallet(object):
         w = Wallet(crypto_adapter)
         w._open(os.path.join(save_data_path(),name))
         return w
+
+    def add_service(self, service):
+        """
+        :Parameters:
+            service : `Service`
+        """
+        if service.name in self.services:
+            raise RuntimeError("Duplicit service {0}".format(service.name))
+
+        self.services[service.name] = service
