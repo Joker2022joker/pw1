@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from cpk.wallet import WalletProtocol
-from nose.tools import eq_, raises
+from cpk.wallet import WalletProtocol, Service, Wallet
+from nose.tools import eq_, raises, ok_
+from unittest import TestCase
+from cpk.crypto import Dummy
 
 def test_wallet_protocol():
     p = WalletProtocol(None)
@@ -31,3 +33,22 @@ def test_wallet_protocol_nonempty_buffer_on_connectionLost():
     p = WalletProtocol(None)
     p.dataReceived(b"foo\n")
     p.connectionLost()
+
+# {{{ serialization
+
+class TestService(TestCase):
+    def setUp(self):
+        self.dict = {
+            'name':'www',
+            'id_as': ['host', 'user'],
+            'password_as': ['pwd']}
+        self.service = Service('www', ['host', 'user'],['pwd'])
+
+    def test_to(self): 
+        eq_(self.service.to_dict(), self.dict)
+
+    def test_from(self):
+        s = Service.from_dict(self.dict)
+        eq_(s.__dict__, self.dict)
+
+# }}}

@@ -18,3 +18,13 @@ def ctrls(xs):
         isclass(x) and
         x is not CementBaseController and
         issubclass(x, CementBaseController)]
+
+class Serializable(object):
+    # TODO: twisted.spread.pb.Copyable
+
+    def to_dict(self):
+        return self.__dict__
+
+    @classmethod
+    def from_dict(cls, dict_):
+        return cls(**dict_)

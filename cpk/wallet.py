@@ -3,8 +3,9 @@
 
 import os
 from .xdg import save_data_path
+from .utils import Serializable
 
-class Service(object):
+class Service(Serializable):
     def __init__(self, name, id_as, password_as):
         """
         :Parameters:
