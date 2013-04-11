@@ -1,13 +1,14 @@
-NOSE:=nosetests --all-modules -s --with-coverage --cover-package=cpk
+NOSE?=nosetests
+NOSETESTS:=$(NOSE) --all-modules -s --with-coverage --cover-package=cpk
 
 null:
 
 test_unit:
 
-	$(NOSE) tests/unit
+	$(NOSETESTS) tests/unit
 
 test_integration:
 
-	$(NOSE) tests/integration
+	$(NOSETESTS) tests/integration
 
 test_all: test_unit test_integration
