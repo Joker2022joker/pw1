@@ -12,9 +12,7 @@ os.environ['XDG_DATA_HOME'] = dirname(abspath(__file__))
 
 from cpk.wallet import Wallet, Service, Record
 from cpk.crypto import Dummy
-from cpk.controller import RecordController
-
-FakePargs = namedtuple('FakePargs', ['service', 'args'])
+from cpk.controller import RecordController, ServiceController
 
 def test_wallet_open():
     wfile = "wallet_deserialization.txt"
@@ -33,6 +31,8 @@ def test_new_record_ctrl():
         def __init__(self, wallet):
             self.wallet = wallet
 
+    FakePargs = namedtuple('FakePargs', ['service', 'attrs'])
+
     wallet = Wallet.open("wallet_new_record_ctrl.txt", Dummy())
     s = Service('www', ['host', 'user'], ['pass'])
     wallet.add_service(s)
@@ -41,6 +41,26 @@ def test_new_record_ctrl():
     ctrl.app = FakeApp(wallet)
     ctrl.pargs = FakePargs('www', ['host=example.com', 'user=laika', 'pass=abcd'])
 
+    eq_(len(wallet.records), 0)
+    ctrl.new()
+    eq_(len(wallet.records), 1)
+
+def test_new_service_ctrl():
+    class FakeApp(object):
+        def __init__(self, wallet):
+            self.wallet = wallet
+
+    FakePargs = namedtuple('FakePargs', ['service', 'pwds', 'ids'])
+
+    wallet = Wallet.open("wallet_new_service_ctrl.txt", Dummy())
+
+    ctrl = ServiceController()
+    ctrl.app = FakeApp(wallet)
+    ctrl.pargs = FakePargs('www', ['pass'], ['host', 'user'])
+
+    eq_(len(wallet.services.values()), 0)
     ctrl.new()
 
-    eq_(len(wallet.records), 1)
+    eq_(len(wallet.services.values()), 1)
+    s = Service(ctrl.pargs.service, ctrl.pargs.ids, ctrl.pargs.pwds)
+    eq_(s, wallet.services['www'])
