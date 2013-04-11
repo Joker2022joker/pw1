@@ -33,5 +33,13 @@ class Serializable(object):
         return self.__dict__
 
     @classmethod
-    def from_dict(cls, dict_):
-        return cls(**dict_)
+    def from_dict(cls, d, wallet):
+        """
+        :Parameters:
+            d : dict
+                The `Serializable` object serialized into dict
+            wallet : `cpk.wallet.Wallet`
+                This is context for all objects of this interface so we accept
+                wallet even though some object need it
+        """
+        return cls(**d)

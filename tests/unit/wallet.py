@@ -82,7 +82,10 @@ def test_wallet_protocol_line_parser():
     eq_(p.lineReceived.cnt, 2)
 
 def test_wallet_protocol_lineReceived():
-    p = WalletProtocol(None, Dummy())
+    class DummyWallet():
+        def get_service(self, _):
+            return Service('dummy')
+    p = WalletProtocol(DummyWallet(), Dummy())
 
     hc = CallCheck()
     rc = CallCheck()
@@ -94,7 +97,7 @@ def test_wallet_protocol_lineReceived():
     eq_(hc.cnt, 1)
     eq_(rc.cnt, 0)
 
-    p.lineReceived(b'{}')
+    p.lineReceived(b'{"service": "a", "attrs":{}}')
     eq_(hc.cnt, 1)
     eq_(rc.cnt, 1)
 
@@ -134,15 +137,14 @@ class SerializationTester(object):
         eq_(self.obj.to_dict(), self.dict)
 
     def test_from(self):
-        s = self.cls.from_dict(self.dict)
+        s = self.cls.from_dict(self.dict, self.wallet)
         eq_(s, self.obj)
 
-class FullCircleSerializationTester(SerializationTester):
     def test_full_circle(self):
-        s = self.cls.from_dict(self.obj.to_dict())
+        s = self.cls.from_dict(self.obj.to_dict(), self.wallet)
         eq_(s, self.obj)
 
-class TestService(TestCase, FullCircleSerializationTester):
+class TestService(TestCase, SerializationTester):
     def setUp(self):
         self.dict = {
             'name':'www',
@@ -150,6 +152,7 @@ class TestService(TestCase, FullCircleSerializationTester):
             'password_as': ['pwd']}
         self.cls = Service
         self.obj = Service('www', ['host', 'user'],['pwd'])
+        self.wallet = Wallet(Dummy())
 
 class TestRecord(TestCase, SerializationTester):
     def setUp(self):
@@ -160,12 +163,8 @@ class TestRecord(TestCase, SerializationTester):
         self.service = Service('www', ['host'], ['pwd'])
         self.obj = Record(self.service,
             host='x', pwd='y')
-
-    def test_from(self):
-        # FIXME
-        self.dict['service'] = self.service
-        s = self.cls.from_dict(self.dict)
-        eq_(s, self.obj)
+        self.wallet = Wallet(Dummy())
+        self.wallet.add_service(self.service)
 # }}}
 
 # {{{ Wallet

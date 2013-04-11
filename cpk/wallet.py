@@ -15,6 +15,13 @@ from .utils import Serializable
 
 log = logging.getLogger(__name__)
 
+class LineRecord(object):
+    """
+    :ivar raw:
+        raw encrypted record
+    """
+    raw = None
+
 class Service(Serializable):
     def __init__(self, name, id_as=[], password_as=[]):
         # FIXME: id_as makes sense to be [] but password_as must be non-empty
@@ -45,7 +52,7 @@ class Service(Serializable):
             and self.id_as == other.id_as \
             and self.password_as == other.password_as
 
-class Record(Serializable):
+class Record(LineRecord, Serializable):
     """
     :ivar service: `Service`
     :ivar attrs: dict
@@ -87,7 +94,8 @@ class Record(Serializable):
         return d
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d, wallet):
+        d['service'] = wallet.get_service(d['service'])
         return cls(d['service'], **d['attrs'])
 
     def __eq__(self, other):
@@ -129,15 +137,17 @@ class WalletProtocol(LineReceiver):
         self.wallet.loaded()
 
     def lineReceived(self, line):
-        line = line.decode('utf-8')
-        line = self.adapter.decrypt(line)
+        raw_line = line.decode('utf-8')
+        line = self.adapter.decrypt(raw_line)
         line = json.loads(line)
         if self.read_header:
             self.headerReceived(line)
             self.read_header = False
             return
 
-        self.recordReceived(line)
+        r = Record.from_dict(line, self.wallet)
+        r.raw = raw_line
+        self.recordReceived(r)
 
     def headerReceived(self, header):
         """
@@ -153,17 +163,43 @@ class WalletProtocol(LineReceiver):
         :Parameters:
             s : dict
         """
-        s = Service.from_dict(s)
+        s = Service.from_dict(s, self.wallet)
         self.wallet.add_service(s)
 
     def recordReceived(self, r):
         """
         :Parameters:
-            s : dict
+            s : `Record`
         """
-        r['service'] = self.wallet.get_service(r['service'])
-        r = Record.from_dict(r)
         self.wallet.add_record(r)
+
+    def sendHeader(self, services):
+        """
+        :Parameters:
+            services : list
+        """
+        header = {'services': [x.to_dict() for x in services]}
+        self.sendLine(header)
+
+    def _sendRecord(self, record):
+        """
+        :Parameters:
+            record : LineRecord
+        """
+        line = record.to_dict()
+        line = json.dumps(line)
+        line = self.adapter.encrypt(line)
+        self.sendLine(line)
+
+    def sendRecord(self, record):
+        """
+        :Parameters:
+            record : LineRecord
+        """
+        if record.raw:
+            self.sendLine(record.raw)
+        else:
+            self._sendRecord(record)
 
 class Wallet(object):
     """
@@ -234,8 +270,12 @@ class Wallet(object):
         self._close()
 
     def _close(self):
-        raise NotImplementedError
- 
+        wtmpfile = save_data_file("wallet.tmp")
+        p = WalletProtocol(self, self.adapter)
+        p.transport = open(wtmpfile, 'w')
+
+        p.sendHeader(self.services.values())
+
     def add_service(self, service):
         """
         :Parameters:
