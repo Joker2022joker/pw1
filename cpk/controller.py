@@ -49,16 +49,22 @@ class ServiceController(CementBaseController):
         label = "service"
         description = "Service"
         arguments = [
-            (['-s', '--service'], dict(type=str, help='service name')),
+            (['-s', '--service'], dict(type=str, help='service name',
+                required=True)),
             (['-p', '--passwords'], dict(type=str, help='password attribute'
-                ' names', nargs='+', metavar='pwds')),
+                ' names', nargs='+', dest='pwds', required=True)),
             (['-i', '--identificators'], dict(help='record identificator'
-                ' attributes', type=str, nargs='*', metavar='ids')),
+                ' attributes', type=str, nargs='*', dest='ids', default=[])),
         ]
 
         aliases = ['s']
 
     @expose()
     def new(self):
-        s = Service(self.pargs.service, self.pargs.ids, self.pargs.pwds)
+        try:
+            ids = self.pargs.ids
+        except AttributeError:
+            ids = []
+
+        s = Service(self.pargs.service, ids, self.pargs.pwds)
         self.app.wallet.add_service(s)
