@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from datetime import datetime
+
 from cement.core import foundation, handler
 from cement.core.controller import CementBaseController, expose, IController
-from datetime import datetime
+
 from .utils import tokenize_assignments
+from .wallet import Record
 
 class CPKController(CementBaseController):
     class Meta:
@@ -17,21 +20,24 @@ class CPKController(CementBaseController):
         self.app._meta.argv = ['-h']
         self._dispatch()
 
-class NewController(CementBaseController):
+class RecordController(CementBaseController):
     class Meta:
         interface = IController
-        label = "new"
-        description = "create new Record or Service"
+        label = "record"
+        description = "Record stuff" # TODO
         arguments = [
             (['-s', '--service'], dict(type=str, help='service')),
             (['args'], dict(metavar='spec', type=str, nargs='+', help='TODO')),
         ]
-        # cpk new -s name pwd=x,y id=a,b
-        # cpk new service=x host=y
 
-        aliases = ['n']
+        aliases = ['r']
 
     @expose()
-    def default(self):
-        print(self.pargs)
-        print(tokenize_assignments(self.pargs.args))
+    def new(self):
+        try:
+            s = self.app.wallet.get_service(self.pargs.service)
+        except KeyError:
+            raise #TODO
+
+        r = Record(s, **tokenize_assignments(self.pargs.args))
+        self.app.wallet.add_record(r)

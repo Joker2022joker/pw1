@@ -225,6 +225,8 @@ class Wallet(object):
         :Parameters:
             service : str
                 `Service.name`
+
+        :raise KeyError: when service doesn't exist
         """
         return self.services[service]
 
