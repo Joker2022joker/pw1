@@ -58,7 +58,7 @@ class NewServiceTester(object):
         ctrl.app = FakeApp(wallet)
         ctrl.pargs = self.pargs
 
-        eq_(len(wallet.services.values()), 0)
+        eq_(wallet._header, None)
         ctrl.new()
 
         eq_(len(wallet.services.values()), 1)

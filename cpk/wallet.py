@@ -22,6 +22,45 @@ class LineRecord(object):
     """
     raw = None
 
+    def changed(self):
+        """
+        Called when LineRecord is changed
+        """
+        self.raw = None
+
+class Header(LineRecord, Serializable):
+    """
+    :ivar services: dict of `Service.name` -> `Service`
+    """
+    def __init__(self, w):
+        self.services = {}
+        self.wallet = w
+        self.wallet._header = self
+        # NOTE: ^ this is weird
+
+    def to_dict(self):
+        return {'services': [x.to_dict() for x in self.services]}
+
+    @classmethod
+    def from_dict(cls, d, wallet):
+        h = cls(wallet)
+        for s in d['services']:
+            h.add_service(Service.from_dict(s, wallet))
+
+        return h
+
+    def add_service(self, service):
+        """
+        :Parameters:
+            service : `Service`
+        """
+        if service.name in self.services:
+            raise RuntimeError("Duplicit service {0}".format(service.name))
+
+        self.services[service.name] = service
+        if self.wallet._loaded:
+            self.changed()
+
 class Service(Serializable):
     def __init__(self, name, id_as=[], password_as=[]):
         # FIXME: id_as makes sense to be [] but password_as must be non-empty
@@ -114,6 +153,7 @@ class WalletProtocol(LineReceiver):
         self.wallet = wallet
         self.adapter = adapter
         self.read_header = True
+        self._line_records_sent = 0
 
     def _get_buffer(self):
         if hasattr(self, '_buffer'):
@@ -140,31 +180,15 @@ class WalletProtocol(LineReceiver):
         raw_line = line.decode('utf-8')
         line = self.adapter.decrypt(raw_line)
         line = json.loads(line)
-        if self.read_header:
-            self.headerReceived(line)
-            self.read_header = False
-            return
+        if not self.wallet._header:
+            return self._headerDictReceived(line)
 
         r = Record.from_dict(line, self.wallet)
         r.raw = raw_line
         self.recordReceived(r)
 
-    def headerReceived(self, header):
-        """
-        :Parameters:
-            header : dict
-        """
-        if 'services' in header:
-            for s in header['services']:
-                self.serviceReceived(s)
-
-    def serviceReceived(self, s):
-        """
-        :Parameters:
-            s : dict
-        """
-        s = Service.from_dict(s, self.wallet)
-        self.wallet.add_service(s)
+    def _headerDictReceived(self, d):
+        Header.from_dict(d, self.wallet)
 
     def recordReceived(self, r):
         """
@@ -173,15 +197,7 @@ class WalletProtocol(LineReceiver):
         """
         self.wallet.add_record(r)
 
-    def sendHeader(self, services):
-        """
-        :Parameters:
-            services : list
-        """
-        header = {'services': [x.to_dict() for x in services]}
-        self.sendLine(header)
-
-    def _sendRecord(self, record):
+    def _sendLineRecord(self, record):
         """
         :Parameters:
             record : LineRecord
@@ -191,24 +207,32 @@ class WalletProtocol(LineReceiver):
         line = self.adapter.encrypt(line)
         self.sendLine(line)
 
-    def sendRecord(self, record):
+    def sendLineRecord(self, record):
         """
+        If record has changed it is sent through _sendLineRecord for full
+        serialization/crypto stuff.
+        Otherwise old crypto record is sent straight to the transport via
+        sendLine
+
         :Parameters:
             record : LineRecord
         """
+        if isinstance(record, Header) and self._line_records_sent > 0:
+            raise RuntimeError("someone fucked up")
+
         if record.raw:
             self.sendLine(record.raw)
         else:
             self._sendRecord(record)
 
+        self._line_records_sent += 1
+
 class Wallet(object):
     """
     :ivar adapter: `crypto.Interface`
-    :ivar services: dict of `Service.name` -> `Service`
     :ivar records: list of `Record`
     :ivar _loaded: bool
         see Wallet.loaded()
-    :ivar _header_changed: bool
     """
     def __init__(self, adapter):
         """
@@ -216,10 +240,9 @@ class Wallet(object):
             adapter : `crypto.Interface`
         """
         self.adapter = adapter
-        self.services = {}
         self.records = []
         self._loaded = False
-        self._header_changed = False
+        self._header = None
         self._record_changed = False
 
     def _open(self, file_):
@@ -230,7 +253,7 @@ class Wallet(object):
         """
         log.debug("opening wallet from %s", file_)
         if not os.path.exists(file_):
-            return
+            return self.loaded() # TODO: unit
 
         if not os.path.isfile(file_):
             raise RuntimeError('wallet file is not a file {0}'.format(file_))
@@ -260,11 +283,18 @@ class Wallet(object):
         w._open(save_data_file(name))
         return w
 
+    def record_changed(self):
+        for r in self.records:
+            if not r.raw:
+                return True
+
+        return False
+
     def close(self):
         """
         Close the wallet, saving any changes that have been made
         """
-        if not (self._header_changed or self._record_changed):
+        if self._header.raw and not self.record_changed():
             return
 
         self._close()
@@ -274,18 +304,13 @@ class Wallet(object):
         p = WalletProtocol(self, self.adapter)
         p.transport = open(wtmpfile, 'w')
 
-        p.sendHeader(self.services.values())
+        p.sendLineRecord(self._header)
 
     def add_service(self, service):
-        """
-        :Parameters:
-            service : `Service`
-        """
-        if service.name in self.services:
-            raise RuntimeError("Duplicit service {0}".format(service.name))
+        if self._loaded and not self._header:
+            Header(self) # TODO: unit
 
-        self.services[service.name] = service
-        self.serviceAdded(service)
+        self._header.add_service(service)
 
     def get_service(self, service):
         """
@@ -295,7 +320,11 @@ class Wallet(object):
 
         :raise KeyError: when service doesn't exist
         """
-        return self.services[service]
+        return self._header.services[service]
+
+    @property
+    def services(self):
+        return self._header.services
 
     def add_record(self, record):
         self.records.append(record)
@@ -306,12 +335,3 @@ class Wallet(object):
         make modifications against the persisted wallet
         """
         self._loaded = True
-
-    def serviceAdded(self, service):
-        """
-        Called when service is added to the wallet
-        """
-        if not self._loaded:
-            return
-
-        self._header_changed = True

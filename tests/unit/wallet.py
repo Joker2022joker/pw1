@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from cpk.wallet import WalletProtocol, Service, Wallet, Record
+from cpk.wallet import WalletProtocol, Service, Wallet, Record, Header
 from nose.tools import eq_, raises, ok_
 from unittest import TestCase
 from cpk.crypto import Dummy
@@ -81,46 +81,57 @@ def test_wallet_protocol_line_parser():
     eq_(p.wallet.loaded.cnt, 1)
     eq_(p.lineReceived.cnt, 2)
 
-def test_wallet_protocol_lineReceived():
+class TestWalletProtocolLineReceived(TestCase):
+    def setUp(self):
+        class DummyWallet():
+            _header = None
+            def get_service(self, _):
+                return Service('dummy')
+        self.p = WalletProtocol(DummyWallet(), Dummy())
+
+        self.hc = CallCheck()
+        self.rc = CallCheck()
+
+        self.p._headerDictReceived = self.hc
+        self.p.recordReceived = self.rc
+
+        eq_(self.hc.cnt, 0)
+        eq_(self.rc.cnt, 0)
+
+    def test_header(self):
+        self.p.lineReceived(b'{"services":[]}')
+        eq_(self.hc.cnt, 1)
+        eq_(self.rc.cnt, 0)
+
+    def test_record(self):
+        Header(self.p.wallet)
+        self.p.lineReceived(b'{"service": "a", "attrs":{}}')
+        eq_(self.hc.cnt, 0)
+        eq_(self.rc.cnt, 1)
+
+def test_wallet_protocol_recordReceived():
     class DummyWallet():
-        def get_service(self, _):
-            return Service('dummy')
-    p = WalletProtocol(DummyWallet(), Dummy())
+        add_record = CallCheck()
+    p = WalletProtocol(DummyWallet(), None)
 
-    hc = CallCheck()
-    rc = CallCheck()
+    eq_(p.wallet.add_record.cnt, 0)
+    p.recordReceived(None)
+    eq_(p.wallet.add_record.cnt, 1)
 
-    p.headerReceived = hc
-    p.recordReceived = rc
+def test_wallet_protocol_headerLineReceived():
+    p = WalletProtocol(Wallet(None), None)
+    ok_(not p.wallet._header)
+    p._headerDictReceived({"services":[]})
+    ok_(p.wallet._header)
 
-    p.lineReceived(b'{}')
-    eq_(hc.cnt, 1)
-    eq_(rc.cnt, 0)
-
-    p.lineReceived(b'{"service": "a", "attrs":{}}')
-    eq_(hc.cnt, 1)
-    eq_(rc.cnt, 1)
-
-def test_wallet_protocol_headerReceived():
-    p = WalletProtocol(None, None)
-    p.serviceReceived = CallCheck()
-    p.headerReceived({'services': [1, 2]})
-
-    eq_(p.serviceReceived.cnt, 2)
-
-def test_wallet_protocol_serviceReceived():
-    class DummyWallet:
-        add_service = CallCheck()
-
-    w = DummyWallet()
-    eq_(w.add_service.cnt, 0)
-
-    p = WalletProtocol(w, None)
-    p.serviceReceived({'name': 'www',
+def test_header_from_dict():
+    w = Wallet(None)
+    d = {'services':[{'name': 'www',
             'id_as': ['host', 'user'],
-            'password_as': ['pwd']})
+            'password_as': ['pwd']}]}
 
-    eq_(w.add_service.cnt, 1)
+    h = Header.from_dict(d, w)
+    ok_('www' in w.services)
 
 @raises(RuntimeError)
 def test_wallet_protocol_nonempty_buffer_on_connectionLost():
@@ -164,13 +175,14 @@ class TestRecord(TestCase, SerializationTester):
         self.obj = Record(self.service,
             host='x', pwd='y')
         self.wallet = Wallet(Dummy())
+        Header(self.wallet)
         self.wallet.add_service(self.service)
 # }}}
 
 # {{{ Wallet
 def test_wallet_add_service():
     w = Wallet(Dummy)
-    w.serviceAdded = CallCheck()
+    h = Header(w)
 
     s = Service('www', ['host', 'user'],['pwd'])
     eq_(len(w.services.items()), 0)
@@ -178,18 +190,20 @@ def test_wallet_add_service():
     eq_(len(w.services.items()), 1)
     ok_(s.name in w.services)
     eq_(s, w.services[s.name])
-    eq_(w.serviceAdded.cnt, 1)
 
 def test_loaded_wallet_add_service():
     w = Wallet(Dummy)
+    h = Header(w)
+    h.raw = 'foo'
     w.loaded()
     s = Service('www', ['host', 'user'],['pwd'])
     w.add_service(s)
-    eq_(w._header_changed, True)
+    eq_(w._header.raw, None)
 
 @raises(RuntimeError)
 def test_wallet_doesnt_accept_duplicit_services():
     w = Wallet(Dummy)
+    Header(w)
     s = Service('www', ['host', 'user'],['pwd'])
     w.add_service(s)
     w.add_service(s)
@@ -205,6 +219,8 @@ def test_wallet_add_record():
 class TestWalletClose(TestCase):
     def setUp(self):
         self.wallet = Wallet(Dummy())
+        Header(self.wallet)
+        self.wallet._header.raw = 'kek'
         self.wallet._close = CallCheck()
 
     def test_no_change(self):
@@ -212,12 +228,12 @@ class TestWalletClose(TestCase):
         eq_(self.wallet._close.cnt, 0)
 
     def test_service_change(self):
-        self.wallet._header_changed = True
+        self.wallet._header.changed()
         self.wallet.close()
         eq_(self.wallet._close.cnt, 1)
 
     def test_record_change(self):
-        self.wallet._record_changed = True
+        self.wallet.record_changed = lambda: True
         self.wallet.close()
         eq_(self.wallet._close.cnt, 1)
 # }}}
