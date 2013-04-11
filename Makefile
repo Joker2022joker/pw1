@@ -1,4 +1,4 @@
-NOSE:=nosetests --all-modules
+NOSE:=nosetests --all-modules -s --with-coverage --cover-package=cpk
 
 null:
 
