@@ -3,6 +3,7 @@
 
 import os
 from copy import deepcopy
+import logging
 
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.error import ConnectionDone
@@ -11,6 +12,8 @@ import json
 
 from .xdg import save_data_path
 from .utils import Serializable
+
+log = logging.getLogger(__name__)
 
 class Service(Serializable):
     def __init__(self, name, id_as=[], password_as=[]):
@@ -179,6 +182,7 @@ class Wallet(object):
             file : str
                 absolute path to the wallet file
         """
+        log.debug("opening wallet from %s", file_)
         if not os.path.exists(file_):
             return
 

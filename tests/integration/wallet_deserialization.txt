@@ -1,5 +1,0 @@
-{'services': [{'name': 'www', 'id_as': ['host', 'user'], 'passwords_as': ['pass']}]}
-
-{'service': 'www', 'attrs': {'host': 'example.com', 'user': 'laika', 'pass': 'nbusr123'}}
-
-
