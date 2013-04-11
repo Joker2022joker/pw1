@@ -2,16 +2,23 @@
 # -*- coding: utf-8 -*-
 
 import re
-from cement.core.controller import CementBaseController
 from inspect import isclass
+
+from cement.core.controller import CementBaseController
 
 SRE_ASSIGNMENT = re.compile('^((?P<var>[a-zA-Z0-9]+)=)(?P<val>.+)?$')
 def tokenize_assignments(xs):
+    """
+    :Parameters:
+        xs : list
+            of strings in format var=val
+    :return: dict
+        with var as keys and val as the values
+    """
     xs = [SRE_ASSIGNMENT.match(x) for x in xs]
     xs = [x for x in xs if x]
     xs = [x.groupdict().values() for x in xs]
-    return xs
-
+    return dict(xs)
 
 def ctrls(xs):
     return [x for x in xs if

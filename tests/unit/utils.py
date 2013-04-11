@@ -16,6 +16,6 @@ def test_ctrls():
 
 def test_tokenize_assignments():
     input_ = ['aZ0=b.,:/', 'x=d=e']
-    output = [['aZ0', 'b.,:/'], ['x', 'd=e']]
+    output = dict([['aZ0', 'b.,:/'], ['x', 'd=e']])
 
-    eq_([list(x) for x in tokenize_assignments(input_)], output)
+    eq_(tokenize_assignments(input_), output)
