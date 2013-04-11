@@ -10,7 +10,7 @@ from twisted.internet.error import ConnectionDone
 
 import json
 
-from .xdg import save_data_path
+from .xdg import save_data_file
 from .utils import Serializable
 
 log = logging.getLogger(__name__)
@@ -122,6 +122,11 @@ class WalletProtocol(LineReceiver):
     # connectionLost when reason = ConnectionDone
     # so I'm just gonna require all lines MUST be ended with the delimiter for
     # now
+        if not reason == ConnectionDone:
+            raise RuntimeError('This should never happen as we are feeding'
+                ' this protocol from a file')
+
+        self.wallet.loaded()
 
     def lineReceived(self, line):
         line = line.decode('utf-8')
@@ -165,6 +170,9 @@ class Wallet(object):
     :ivar adapter: `crypto.Interface`
     :ivar services: dict of `Service.name` -> `Service`
     :ivar records: list of `Record`
+    :ivar _loaded: bool
+        see Wallet.loaded()
+    :ivar _header_changed: bool
     """
     def __init__(self, adapter):
         """
@@ -174,6 +182,9 @@ class Wallet(object):
         self.adapter = adapter
         self.services = {}
         self.records = []
+        self._loaded = False
+        self._header_changed = False
+        self._record_changed = False
 
     def _open(self, file_):
         """
@@ -196,6 +207,9 @@ class Wallet(object):
     @staticmethod
     def open(name, crypto_adapter):
         """
+        Return new Wallet object from XDG_DATA_HOME/`name` accessed via
+        `crypto_adapter`
+
         :Parameters:
             name : str
                 filename of the wallet file. It is expected in
@@ -203,13 +217,25 @@ class Wallet(object):
             crypto_adapter : `cpk.crypto.Interface`
                 cryptographic adapter used for actual reading/writing from/to
                 wallet file
-        :
+        :return: Wallet
         """
 
         w = Wallet(crypto_adapter)
-        w._open(os.path.join(save_data_path(),name))
+        w._open(save_data_file(name))
         return w
 
+    def close(self):
+        """
+        Close the wallet, saving any changes that have been made
+        """
+        if not (self._header_changed or self._record_changed):
+            return
+
+        self._close()
+
+    def _close(self):
+        raise NotImplementedError
+ 
     def add_service(self, service):
         """
         :Parameters:
@@ -219,6 +245,7 @@ class Wallet(object):
             raise RuntimeError("Duplicit service {0}".format(service.name))
 
         self.services[service.name] = service
+        self.serviceAdded(service)
 
     def get_service(self, service):
         """
@@ -232,3 +259,19 @@ class Wallet(object):
 
     def add_record(self, record):
         self.records.append(record)
+
+    def loaded(self):
+        """
+        Called when wallet has been loaded from "storage" and further changes
+        make modifications against the persisted wallet
+        """
+        self._loaded = True
+
+    def serviceAdded(self, service):
+        """
+        Called when service is added to the wallet
+        """
+        if not self._loaded:
+            return
+
+        self._header_changed = True

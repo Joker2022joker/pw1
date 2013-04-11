@@ -52,6 +52,9 @@ def _setup_crypto_adapter(app):
 def _setup_wallet(app):
     app.wallet = Wallet.open(app.config.get('main','db'), app.crypto_adapter)
 
+def _close_wallet(app):
+    app.wallet.close()
+
 def main():
     app = Application()
 
@@ -59,6 +62,10 @@ def main():
         handler.register(c)
     hook.register('post_setup', _setup_crypto_adapter, weight=0)
     hook.register('post_setup', _setup_wallet, weight=10)
+    hook.register('pre_close', _close_wallet)
 
-    app.setup()
-    app.run()
+    try:
+        app.setup()
+        app.run()
+    finally:
+        app.close()

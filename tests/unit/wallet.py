@@ -58,7 +58,11 @@ def test_record_attribute_check():
 
 # {{{ WalletProtocol 
 def test_wallet_protocol_line_parser():
-    p = WalletProtocol(None, None)
+    class DummyWallet(object):
+        loaded = CallCheck()
+
+    p = WalletProtocol(DummyWallet(), None)
+    eq_(p.wallet.loaded.cnt, 0)
 
     data = b"foo\nbar\n\nbaz\n\n"
     expected = [b"foo\nbar", b"baz"]
@@ -74,6 +78,7 @@ def test_wallet_protocol_line_parser():
     p.dataReceived(data)
     p.connectionLost()
 
+    eq_(p.wallet.loaded.cnt, 1)
     eq_(p.lineReceived.cnt, 2)
 
 def test_wallet_protocol_lineReceived():
@@ -166,12 +171,22 @@ class TestRecord(TestCase, SerializationTester):
 # {{{ Wallet
 def test_wallet_add_service():
     w = Wallet(Dummy)
+    w.serviceAdded = CallCheck()
+
     s = Service('www', ['host', 'user'],['pwd'])
     eq_(len(w.services.items()), 0)
     w.add_service(s)
     eq_(len(w.services.items()), 1)
     ok_(s.name in w.services)
     eq_(s, w.services[s.name])
+    eq_(w.serviceAdded.cnt, 1)
+
+def test_loaded_wallet_add_service():
+    w = Wallet(Dummy)
+    w.loaded()
+    s = Service('www', ['host', 'user'],['pwd'])
+    w.add_service(s)
+    eq_(w._header_changed, True)
 
 @raises(RuntimeError)
 def test_wallet_doesnt_accept_duplicit_services():
@@ -187,4 +202,23 @@ def test_wallet_add_record():
     eq_(len(w.records), 0)
     w.add_record(r)
     eq_(len(w.records), 1)
+
+class TestWalletClose(TestCase):
+    def setUp(self):
+        self.wallet = Wallet(Dummy())
+        self.wallet._close = CallCheck()
+
+    def test_no_change(self):
+        self.wallet.close()
+        eq_(self.wallet._close.cnt, 0)
+
+    def test_service_change(self):
+        self.wallet._header_changed = True
+        self.wallet.close()
+        eq_(self.wallet._close.cnt, 1)
+
+    def test_record_change(self):
+        self.wallet._record_changed = True
+        self.wallet.close()
+        eq_(self.wallet._close.cnt, 1)
 # }}}
