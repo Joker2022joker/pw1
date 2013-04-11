@@ -156,8 +156,7 @@ class WalletProtocol(LineReceiver):
         :Parameters:
             s : dict
         """
-        r['service'] = self.wallet.get_service(r['service_name'])
-        del r['service_name']
+        r['service'] = self.wallet.get_service(r['service'])
         r = Record.from_dict(r)
         self.wallet.add_record(r)
 
