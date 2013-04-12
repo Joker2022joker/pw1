@@ -10,10 +10,13 @@ env:
 install:
     - pip install -q Twisted==$TWISTED_V
     - python setup.py install
+
+before_script:
+    - pip install coverage
+
 script: make test_all
 
 notifications:
   irc:
     channels:
       - "irc.freenode.net#cpk"
-    skip_join: true
