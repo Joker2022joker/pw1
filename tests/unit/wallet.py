@@ -1,16 +1,40 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from cpk.wallet import WalletProtocol, Service, Wallet, Record, Header
+import logging
 from nose.tools import eq_, raises, ok_
 from unittest import TestCase
+
 from cpk.crypto import Dummy
+from cpk.wallet import WalletProtocol, Service, Wallet, Record, Header
+from cpk.wallet import LineRecord
+
+log = logging.getLogger(__name__)
 
 class CallCheck(object):
     def __init__(self):
         self.cnt = 0
     def __call__(self, *args, **kw):
         self.cnt += 1
+
+# {{{ LineRecord
+def test_LineRecord_changed():
+    o = LineRecord()
+    o.raw = 'foo'
+    o.changed()
+    eq_(o.raw, None)
+# }}}
+
+# {{{ Header
+@raises(RuntimeError)
+def test_header_doesnt_accept_duplicit_services():
+    w = Wallet(Dummy)
+    h = Header(w)
+    s = Service('www', ['host', 'user'],['pwd'])
+    h.add_service(s)
+    h.add_service(s)
+
+# }}}
 
 # {{{ Service
 def test_service_contains():
@@ -80,6 +104,42 @@ def test_wallet_protocol_line_parser():
 
     eq_(p.wallet.loaded.cnt, 1)
     eq_(p.lineReceived.cnt, 2)
+
+@raises(RuntimeError)
+def test_unclean_conn_close():
+    p = WalletProtocol(Wallet(None), None)
+    p.connectionLost(False)
+
+def test_wallet_protocol__sendLineRecord():
+    class TestProtocol(WalletProtocol):
+        def sendLine(self, line):
+            self._sent_line = line
+
+    p = TestProtocol(Wallet(Dummy()), Dummy())
+    ok_(not hasattr(p, '_sent_line'))
+    p._sendLineRecord(Service('www', ['a'], ['b']))
+    eq_(p._sent_line, '{"password_as": ["b"], "id_as": ["a"], "name": "www"}')
+    # FIXME: check calls, not output
+
+@raises(RuntimeError)
+def test_wallet_protocol_sendLineRecord():
+    p = WalletProtocol(Wallet(Dummy()), Dummy())
+    p.sendLine = CallCheck()
+    h = Header(p.wallet)
+    h.add_service(Service('www', ['a'], ['b']))
+    p.sendLineRecord(h)
+    p.sendLineRecord(h)
+
+def test_wallet_protocol_sendLineRecord_sends_raw():
+    p = WalletProtocol(Wallet(Dummy()), Dummy())
+    p.sendLine = CallCheck()
+    p._sendLineRecord = CallCheck()
+    h = Header(p.wallet)
+    h.raw = 'foo'
+    h.add_service(Service('www', ['a'], ['b']))
+    p.sendLineRecord(h)
+    eq_(p.sendLine.cnt, 1)
+    eq_(p._sendLineRecord.cnt, 0)
 
 class TestWalletProtocolLineReceived(TestCase):
     def setUp(self):
@@ -177,6 +237,17 @@ class TestRecord(TestCase, SerializationTester):
         self.wallet = Wallet(Dummy())
         Header(self.wallet)
         self.wallet.add_service(self.service)
+
+class TestHeader(TestCase, SerializationTester):
+    def setUp(self):
+        self.cls = Header
+        self.dict = {
+            'services': [{'name': 'www', 'id_as': ['a'], 'password_as': ['b']}]}
+        self.wallet = Wallet(Dummy())
+        self.obj = Header(self.wallet)
+        self.obj.add_service(Service('www', ['a'], ['b']))
+
+        log.debug(self.obj.to_dict())
 # }}}
 
 # {{{ Wallet
@@ -236,4 +307,52 @@ class TestWalletClose(TestCase):
         self.wallet.record_changed = lambda: True
         self.wallet.close()
         eq_(self.wallet._close.cnt, 1)
+
+@raises(RuntimeError)
+def test_wallet__open_notfile():
+    w = Wallet(Dummy())
+    w._open("/tmp")
+
+def test_wallet__open():
+    class DummyProtocol(WalletProtocol):
+        def dataReceived(self, _):
+            self.__class__.drc = True
+
+        def connectionLost(self, _=None):
+            self.__class__.clc = True
+
+    w = Wallet(Dummy())
+    w.protocol = DummyProtocol
+    from tempfile import mkstemp
+    _, wfile = mkstemp()
+    with open(wfile, "wb") as f:
+        f.write("foo")
+
+    w._open(wfile)
+    ok_(DummyProtocol.clc)
+    ok_(DummyProtocol.drc)
+
+def test_wallet_record_not_changed():
+    w = Wallet(None)
+    Header(w)
+    s = Service('www', ['a'], ['b'])
+    w.add_service(s)
+    r1 = Record(s, a='a', b='b')
+    r2 = Record(s, a='a1', b='b')
+    r2.raw = r1.raw = 'foo'
+    w.add_record(r1)
+    w.add_record(r2)
+    ok_(not w.record_changed())
+
+def test_wallet_record_changed():
+    w = Wallet(None)
+    Header(w)
+    s = Service('www', ['a'], ['b'])
+    w.add_service(s)
+    r1 = Record(s, a='a', b='b')
+    r2 = Record(s, a='a1', b='b')
+    r1.raw = 'foo'
+    w.add_record(r1)
+    w.add_record(r2)
+    ok_(w.record_changed())
 # }}}

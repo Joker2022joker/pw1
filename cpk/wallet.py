@@ -39,7 +39,7 @@ class Header(LineRecord, Serializable):
         # NOTE: ^ this is weird
 
     def to_dict(self):
-        return {'services': [x.to_dict() for x in self.services]}
+        return {'services': [x.to_dict() for x in self.services.values()]}
 
     @classmethod
     def from_dict(cls, d, wallet):
@@ -60,6 +60,9 @@ class Header(LineRecord, Serializable):
         self.services[service.name] = service
         if self.wallet._loaded:
             self.changed()
+
+    def __eq__(self, other):
+        return self.services == other.services
 
 class Service(Serializable):
     def __init__(self, name, id_as=[], password_as=[]):
@@ -155,7 +158,7 @@ class WalletProtocol(LineReceiver):
         self.read_header = True
         self._line_records_sent = 0
 
-    def _get_buffer(self):
+    def _get_buffer(self): # pragma: no cover # TODO
         if hasattr(self, '_buffer'):
             # twisted >= 13
             return self._buffer
@@ -223,7 +226,7 @@ class WalletProtocol(LineReceiver):
         if record.raw:
             self.sendLine(record.raw)
         else:
-            self._sendRecord(record)
+            self._sendLineRecord(record)
 
         self._line_records_sent += 1
 
@@ -234,6 +237,8 @@ class Wallet(object):
     :ivar _loaded: bool
         see Wallet.loaded()
     """
+    protocol = WalletProtocol
+
     def __init__(self, adapter):
         """
         :Parameters:
@@ -259,7 +264,7 @@ class Wallet(object):
             raise RuntimeError('wallet file is not a file {0}'.format(file_))
 
         wfile = open(file_, 'rb')
-        p = WalletProtocol(self, self.adapter)
+        p = self.protocol(self, self.adapter)
         p.dataReceived(wfile.read())
         p.connectionLost()
 
@@ -305,6 +310,8 @@ class Wallet(object):
         p.transport = open(wtmpfile, 'w')
 
         p.sendLineRecord(self._header)
+        for x in self.records:
+            p.sendLineRecord(x)
 
     def add_service(self, service):
         if self._loaded and not self._header:
