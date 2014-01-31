@@ -15,6 +15,22 @@ Features
     * Database backend is sqlite but accessed via `sqlalchemy <http://www.sqlalchemy.org/>`_, so any RDBMS is easily possible.
 * `XDG <http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_ support
 
+
+Caveat Emptor
+=============
+*   Currently only the passwords are encrypted.
+    ∴ resource paths are unencrypted
+
+*   The UX is horrible but it works and is only thing I trust right now.
+
+    * manually gitting after each wallet file change
+
+    * manually running echo | xsel -b immediately after the passwd has
+      been used
+
+    * some commands take args weirdly (eg set, mv) so I figured it's
+      easier to use rm and new at the moment.
+
 Usage
 =====
 First things first
@@ -94,13 +110,6 @@ When you are specifying a `node_matcher` you don't have to use the full form.
 
 Which doesn't really make sense as user node would typically be always followed
 by password but it may be handy in other cases.
-
-Caveat Emptor
-=============
-*   Currently only the passwords are encrypted.
-    ∴ resource paths are unencrypted
-
-*   The CLI is experimental yet and may change behaviour with each minor release
 
 Installation
 =============
