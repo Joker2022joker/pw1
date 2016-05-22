@@ -16,10 +16,10 @@ class Command(IFace):
         #nodes = session.query(Node).filter_by(value=args.node_value).all()
         nodes_found = Node.query().get_nodes_by_value(args.node_value).all()
         if not nodes_found:
-            print "No matches"
+            print("No matches")
             return
 
         for nf in nodes_found:
             for path in nf.get_paths():
                 path_formatted = [make_token(n) for n in path]
-                print " ".join(path_formatted)
+                print(" ".join(path_formatted))

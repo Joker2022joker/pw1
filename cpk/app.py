@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ConfigParser import SafeConfigParser as ConfigParser
+from configparser import SafeConfigParser as ConfigParser
 from os.path import expanduser, dirname
 from logging import getLogger
 from xdg.BaseDirectory import load_first_config
@@ -23,12 +23,12 @@ class ConfParser(ConfigParser):
         if path is not None:
             self.read([path])
 
-        for (s,kv) in self.defaults.iteritems():
+        for s,kv in self.defaults.items():
             # set default values into config
             if not self.has_section(s):
                 self.add_section(s)
 
-            for k, v in kv.iteritems():
+            for k, v in kv.items():
                 if not self.has_option(s,k): self.set(s,k,v)
 
 
@@ -106,13 +106,13 @@ class App(object):
                 import cpk, sys
                 msg = "missing config.ini in $XDG_CONFIG_HOME\nyou " \
                     "can find example files in %s/data/configs" % dirname(cpk.__file__)
-                print >> sys.stderr, msg
+                print(msg, file=sys.stderr)
                 exit(1)
 
             self._cnf = self.conf_parser(cnf)
         return self._cnf
 
-    _command_prefix = "commands."
+    _command_prefix = "cpk.commands."
     def command(self):
         command = __import__(self._command_prefix+self.args.command,globals(),locals(),[self.args.command])
         command = getattr(command,"Command")

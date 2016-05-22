@@ -20,7 +20,8 @@ class Command(object):
         return tokenize_nodes(self.app.args.nodes)
 
     def tokens_2_filters(self,tokens):
-        return map(lambda (x,y): {"attr":x, "node":y}, tokens)
+        tokens = [[y for y in x] for x in tokens]
+        return [{"attr":x, "node":y} for x,y in tokens]
 
     @property
     def conf(self):
@@ -56,14 +57,14 @@ class Command(object):
 
     def die(self,message):
         import sys
-        print >> sys.stderr, message
+        print(message, file=sys.stderr)
         from logging import getLogger
         getLogger("%s_%s" % (__name__, self.__class__.__name__,)).fatal(message)
         exit(1)
 
     def output(self,s):
         if not self.conf.getboolean('main','output_kill_0x0a'):
-            print s
+            print(s)
         else:
             import sys
             sys.stdout.write(s)

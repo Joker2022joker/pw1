@@ -23,7 +23,7 @@ class Command(IFace):
         pgen = self.conf.get('main','password_generator')
         p = Popen(pgen.split(" "),stdout=PIPE)
         p.wait()
-        return p.stdout.read()[:-1]
+        return p.stdout.read()[:-1].decode("utf-8")
 
     def attribute(self):
         """ Creates new attribute """
