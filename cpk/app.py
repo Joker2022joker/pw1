@@ -64,6 +64,8 @@ def arg_parser(**kwargs):
 
     [add_gp(ps[i]) for i in ["get","set","new","rm"]]
 
+    ps['dump'] = subp.add_parser('dump')
+
     return p
 
 class App(object):

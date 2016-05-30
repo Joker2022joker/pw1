@@ -9,6 +9,10 @@ from sqlalchemy.schema import Table
 from sqlalchemy.orm.query import Query
 
 import logging
+import yaml
+import subprocess
+
+from . import utils
 log = logging.getLogger(__name__)
 
 Base = declarative_base()
@@ -78,6 +82,35 @@ class Node(Base):
 
 
         return [ x for x in nodes if filter(x) ]
+
+    def is_leaf(self):
+        return self.lower() == []
+
+    def dump(self):
+        return " ".join(list(self.get_path_as_args()))
+
+    def get_path_as_args(self):
+        paths = self.get_paths()
+        if len(paths) > 1:
+            raise NotImplementedError("There is at least one node with more than 2 access paths")
+
+        path = paths.pop()
+        path.pop()
+        # the path contains self as last element
+        # so get rid of it
+
+        for node in path:
+            if "\n" in node.value:
+                raise RuntimeError("unexpected newline in {}".format(self.get_paths()))
+
+            yield "{}={}".format(node.attr.name, node.value) 
+
+        yield "{}={}".format(
+            self.attr.name
+        ,   utils.decrypt(self.value)
+        )
+        # FIXME: will break with setting `debug.encrypt=off`
+        # but who cares here
 
     def add_child(self,node):
         e =Edge(self,node)
@@ -182,6 +215,16 @@ class Attribute(Base):
     description = Column(String(256))
 
     nodes = relationship(Node, backref='attribute')
+
+    def dict(self):
+        return dict(
+            id = self.id
+        ,   name = self.name
+        ,   description = self.description
+        )
+
+    def yaml(self):
+        return yaml.dump(self.dict()).strip()
 
     @classmethod
     def magic_password_id(self):
