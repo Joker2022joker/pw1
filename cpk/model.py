@@ -102,6 +102,7 @@ class Node(Base):
     def get(self,filters,create=False):
         """ Get exactly one node identified by filters which translates to a unique path in the graph """
         last_node = self.root()
+        #print(filters)
 
         while filters:
             filter = filters.pop(0)
@@ -119,7 +120,7 @@ class Node(Base):
                 last_node = matching_nodes[0]
             elif create:
                 new_node = Node()
-                if filter.has_key('node'):
+                if 'node' in filter:
                     new_node.value = filter['node']
 
                 log.debug(filter)
@@ -188,7 +189,7 @@ class Attribute(Base):
 
     @classmethod
     def __get_conf(self,name):
-        from ConfigParser import NoSectionError, NoOptionError
+        from configparser import NoSectionError, NoOptionError
         try:
             return app.conf.get('attributes',name)
         except (NoSectionError, NoOptionError):

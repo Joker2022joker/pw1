@@ -23,14 +23,14 @@ setup(
         "pyxdg",
     ],
 
-    extras_require = {
-        'python_gnupg': ["python-gnupg"],
-    },
-
     package_data = {
         "cpk": [ "data/*/*" ]
     },
 
     entry_points = {
         'console_scripts': ['cpk = cpk.app:main']},
+
+    classifiers = [
+        "Programming Language :: Python :: 3 :: Only"
+    ],
 )

@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 from . import Command as IFace
 from cpk.model import Attribute, session, Node
 from cpk import exc
