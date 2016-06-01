@@ -141,25 +141,3 @@ Dependencies
 * sqlalchemy
 * argparse
 * `pyxdg <http://www.freedesktop.org/wiki/Software/pyxdg>`_
-
-with tests
------------
-* apg
-* nosetests
-* subprocess
-
-Tests
-========
-* You need an environment with installed cpk itself as the acceptance tests operates on the installed executable
-* **The tests must be run on testing user** as it uses XDG as in normal operation
-* The user needs to have prepared ~/.gnupg directory. For noninteractivity with prepared key without passord and configured default-recipient-self
-
-You can prepare this by eg.
-::
-
-    virtualenv ~/.cpkenv
-    source ~/cpkenv/bin/activate
-    python setup.py install
-
-
-* Then just execute run_tests.sh # $PWD agnostic
