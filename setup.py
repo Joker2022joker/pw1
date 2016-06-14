@@ -21,6 +21,7 @@ setup(
         "sqlalchemy",
         "argparse",
         "pyxdg",
+        "PyYAML",
     ],
 
     package_data = {
