@@ -20,7 +20,7 @@ class ShellGnupg:
         )
         out, err = p.communicate(input=stdin.encode("utf-8"))
         if p.returncode != 0:
-            raise RuntimeError("GPG error: {}".format(err))
+            raise RuntimeError("GPG error {}: {}".format(p.returncode, err))
         return out.decode("utf-8")
 
 impl = ShellGnupg()
