@@ -38,7 +38,7 @@ class Node(Base):
         # ^ FIXME: ugly
 
     def __repr__(self):
-        return "<%s_%s_%s_%s>" % (self.__class__.__name__, self.id, self.attribute_id, self.value)
+        return "<%s_%s_%s>" % (self.__class__.__name__, self.id, self.attribute_id)
 
     @classmethod
     def root(self):

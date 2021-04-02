@@ -64,7 +64,10 @@ def arg_parser(**kwargs):
 
     [add_gp(ps[i]) for i in ["get","set","new","rm"]]
 
-    ps['dump'] = subp.add_parser('dump')
+    ps['dump'] = subp.add_parser('dump', help=(
+        'Dump data into filesystem structure understood by passwordstore.org'
+    ))
+    ps['dump'].add_argument('output_dir', type=str)
 
     return p
 
